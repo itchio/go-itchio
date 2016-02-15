@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 )
 
@@ -17,24 +18,6 @@ type Client struct {
 
 type Response struct {
 	Errors []string
-}
-
-type MyGamesResponse struct {
-	Response
-
-	Games []Game
-}
-
-type GameUploadsResponse struct {
-	Response
-
-	Uploads []Upload `json:"uploads"`
-}
-
-type UploadDownloadResponse struct {
-	Response
-
-	Url string
 }
 
 type User struct {
@@ -67,8 +50,14 @@ func ClientWithKey(key string) *Client {
 	}
 }
 
+type MyGamesResponse struct {
+	Response
+
+	Games []Game
+}
+
 func (c *Client) MyGames() (r MyGamesResponse, err error) {
-	path := c.makePath("my-games")
+	path := c.MakePath("my-games")
 
 	resp, err := http.Get(path)
 	if err != nil {
@@ -77,10 +66,16 @@ func (c *Client) MyGames() (r MyGamesResponse, err error) {
 
 	err = parseAPIResponse(&r, resp.Body)
 	return
+}
+
+type GameUploadsResponse struct {
+	Response
+
+	Uploads []Upload `json:"uploads"`
 }
 
 func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
-	path := c.makePath("game/%d/uploads", gameID)
+	path := c.MakePath("game/%d/uploads", gameID)
 
 	resp, err := http.Get(path)
 	if err != nil {
@@ -91,8 +86,14 @@ func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 	return
 }
 
+type UploadDownloadResponse struct {
+	Response
+
+	Url string
+}
+
 func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err error) {
-	path := c.makePath("upload/%d/download", uploadID)
+	path := c.MakePath("upload/%d/download", uploadID)
 
 	resp, err := http.Get(path)
 	if err != nil {
@@ -103,7 +104,178 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 	return r, err
 }
 
-func (c *Client) makePath(format string, a ...interface{}) string {
+type NewBuildResponse struct {
+	ID int64
+
+	PreviousHashURL    string `json:"previous_hash_url"`
+	PreviousRecipeURL  string `json:"previous_recipe_url"`
+	PreviousArchiveURL string `json:"previous_archive_url"`
+}
+
+func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse, err error) {
+	path := c.MakePath("builds")
+
+	form := url.Values{}
+	form.Add("target", target)
+	form.Add("channel", channel)
+
+	resp, err := http.PostForm(path, form)
+	if err != nil {
+		return
+	}
+
+	err = parseAPIResponse(&r, resp.Body)
+	return
+}
+
+type BuildFileType string
+
+const (
+	BuildFileType_RECIPE    BuildFileType = "patch"
+	BuildFileType_ARCHIVE                 = "archive"
+	BuildFileType_SIGNATURE               = "signature"
+)
+
+type BuildFile struct {
+	ID   int64
+	Type BuildFileType
+	Size int64
+}
+
+type ListBuildFilesResponse struct {
+	Files []BuildFile
+}
+
+func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err error) {
+	path := c.MakePath("builds/%d/files")
+
+	resp, err := http.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = parseAPIResponse(&r, resp.Body)
+	return
+}
+
+type NewBuildFileResponse struct {
+	ID        int64
+	UploadURL string
+}
+
+func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBuildFileResponse, err error) {
+	path := c.MakePath("builds/%d/files", buildID)
+
+	form := url.Values{}
+	form.Add("type", string(fileType))
+
+	resp, err := http.PostForm(path, form)
+	if err != nil {
+		return
+	}
+
+	err = parseAPIResponse(&r, resp.Body)
+	return
+}
+
+type FinalizeBuildFileResponse struct{}
+
+func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r FinalizeBuildFileResponse, err error) {
+	path := c.MakePath("builds/%d/files/%d", buildID, fileID)
+
+	form := url.Values{}
+	form.Add("size", fmt.Sprintf("%d", size))
+
+	resp, err := http.PostForm(path, form)
+	if err != nil {
+		return
+	}
+
+	err = parseAPIResponse(&r, resp.Body)
+	return
+}
+
+func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadCloser, err error) {
+	path := c.MakePath("builds/%d/files/%d/download", buildID, fileID)
+
+	resp, err := http.Get(path)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode/100 != 3 {
+		err = fmt.Errorf("expected redirection")
+		return
+	}
+
+	dlPath := resp.Header.Get("Location")
+
+	req, err := http.NewRequest("GET", dlPath, nil)
+	if err != nil {
+		return
+	}
+
+	reader = req.Body
+	return
+}
+
+type BuildEventType string
+
+const (
+	BuildEvent_JOB_STARTED   BuildEventType = "job_started"
+	BuildEvent_JOB_FAILED                   = "job_failed"
+	BuildEvent_JOB_COMPLETED                = "job_completed"
+)
+
+type BuildEventData map[string]interface{}
+
+type NewBuildEventResponse struct{}
+
+func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, message string, data BuildEventData) (r NewBuildEventResponse, err error) {
+	path := c.MakePath("builds/%d/events", buildID)
+
+	form := url.Values{}
+	form.Add("type", string(eventType))
+	form.Add("message", message)
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+	form.Add("data", string(jsonData))
+
+	resp, err := http.PostForm(path, form)
+	if err != nil {
+		return
+	}
+
+	err = parseAPIResponse(&r, resp.Body)
+	return
+}
+
+type BuildEvent struct {
+	Type    BuildEventType
+	Message string
+	Data    BuildEventData
+}
+
+type ListBuildEventsResponse struct {
+	Events []BuildEvent
+}
+
+func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err error) {
+	path := c.MakePath("builds/%d/events", buildID)
+
+	resp, err := http.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = parseAPIResponse(&r, resp.Body)
+	return
+}
+
+func (c *Client) MakePath(format string, a ...interface{}) string {
 	subPath := fmt.Sprintf(format, a...)
 	return fmt.Sprintf("%s/%s/%s", c.BaseURL, c.Key, subPath)
 }
