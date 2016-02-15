@@ -106,10 +106,6 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 
 type NewBuildResponse struct {
 	ID int64
-
-	PreviousHashURL    string `json:"previous_hash_url"`
-	PreviousRecipeURL  string `json:"previous_recipe_url"`
-	PreviousArchiveURL string `json:"previous_archive_url"`
 }
 
 func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse, err error) {
