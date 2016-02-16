@@ -64,7 +64,7 @@ func (c *Client) MyGames() (r MyGamesResponse, err error) {
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -82,7 +82,7 @@ func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -100,7 +100,7 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return r, err
 }
 
@@ -121,7 +121,7 @@ func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse,
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -151,7 +151,7 @@ func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err er
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -171,7 +171,7 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBu
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -188,7 +188,7 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -246,7 +246,7 @@ func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, messa
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -268,7 +268,7 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 		return
 	}
 
-	err = parseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp.Body)
 	return
 }
 
@@ -277,7 +277,7 @@ func (c *Client) MakePath(format string, a ...interface{}) string {
 	return fmt.Sprintf("%s/%s/%s", c.BaseURL, c.Key, subPath)
 }
 
-func parseAPIResponse(dst interface{}, bodyReader io.ReadCloser) error {
+func ParseAPIResponse(dst interface{}, bodyReader io.ReadCloser) error {
 	defer bodyReader.Close()
 
 	err := json.NewDecoder(bodyReader).Decode(dst)
