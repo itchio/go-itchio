@@ -282,7 +282,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	defer bodyReader.Close()
 
 	if res.StatusCode/100 != 2 {
-		return fmt.Errorf("Server returned %s", res.Status)
+		return fmt.Errorf("Server returned %s for %s", res.Status, res.Request.URL.String())
 	}
 
 	err := json.NewDecoder(bodyReader).Decode(dst)
