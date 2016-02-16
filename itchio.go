@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 )
 
 type Client struct {
@@ -110,7 +111,7 @@ type NewBuildResponse struct {
 }
 
 func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse, err error) {
-	path := c.MakePath("builds")
+	path := c.MakePath("wharf/builds")
 
 	form := url.Values{}
 	form.Add("target", target)
@@ -144,7 +145,7 @@ type ListBuildFilesResponse struct {
 }
 
 func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err error) {
-	path := c.MakePath("builds/%d/files")
+	path := c.MakePath("wharf/builds/%d/files")
 
 	resp, err := http.Get(path)
 	if err != nil {
@@ -161,7 +162,7 @@ type NewBuildFileResponse struct {
 }
 
 func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBuildFileResponse, err error) {
-	path := c.MakePath("builds/%d/files", buildID)
+	path := c.MakePath("wharf/builds/%d/files", buildID)
 
 	form := url.Values{}
 	form.Add("type", string(fileType))
@@ -178,7 +179,7 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBu
 type FinalizeBuildFileResponse struct{}
 
 func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r FinalizeBuildFileResponse, err error) {
-	path := c.MakePath("builds/%d/files/%d", buildID, fileID)
+	path := c.MakePath("wharf/builds/%d/files/%d", buildID, fileID)
 
 	form := url.Values{}
 	form.Add("size", fmt.Sprintf("%d", size))
@@ -193,7 +194,7 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 }
 
 func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadCloser, err error) {
-	path := c.MakePath("builds/%d/files/%d/download", buildID, fileID)
+	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
 
 	resp, err := http.Get(path)
 	if err != nil {
@@ -229,7 +230,7 @@ type BuildEventData map[string]interface{}
 type NewBuildEventResponse struct{}
 
 func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, message string, data BuildEventData) (r NewBuildEventResponse, err error) {
-	path := c.MakePath("builds/%d/events", buildID)
+	path := c.MakePath("wharf/builds/%d/events", buildID)
 
 	form := url.Values{}
 	form.Add("type", string(eventType))
@@ -261,7 +262,7 @@ type ListBuildEventsResponse struct {
 }
 
 func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err error) {
-	path := c.MakePath("builds/%d/events", buildID)
+	path := c.MakePath("wharf/builds/%d/events", buildID)
 
 	resp, err := http.Get(path)
 	if err != nil {
@@ -272,9 +273,13 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 	return
 }
 
+// Helpers
+
 func (c *Client) MakePath(format string, a ...interface{}) string {
-	subPath := fmt.Sprintf(format, a...)
-	return fmt.Sprintf("%s/%s/%s", c.BaseURL, c.Key, subPath)
+	base := strings.Trim(c.BaseURL, "/")
+	subPath := strings.Trim(fmt.Sprintf(format, a...), "/")
+
+	return fmt.Sprintf("%s/%s/%s", base, c.Key, subPath)
 }
 
 func ParseAPIResponse(dst interface{}, res *http.Response) error {
