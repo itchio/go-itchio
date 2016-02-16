@@ -64,7 +64,7 @@ func (c *Client) MyGames() (r MyGamesResponse, err error) {
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -82,7 +82,7 @@ func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -100,7 +100,7 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return r, err
 }
 
@@ -121,7 +121,7 @@ func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse,
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -151,7 +151,7 @@ func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err er
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -171,7 +171,7 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBu
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -188,7 +188,7 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -246,7 +246,7 @@ func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, messa
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -268,7 +268,7 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 		return
 	}
 
-	err = ParseAPIResponse(&r, resp.Body)
+	err = ParseAPIResponse(&r, resp)
 	return
 }
 
@@ -277,8 +277,13 @@ func (c *Client) MakePath(format string, a ...interface{}) string {
 	return fmt.Sprintf("%s/%s/%s", c.BaseURL, c.Key, subPath)
 }
 
-func ParseAPIResponse(dst interface{}, bodyReader io.ReadCloser) error {
+func ParseAPIResponse(dst interface{}, res *http.Response) error {
+	bodyReader := res.Body
 	defer bodyReader.Close()
+
+	if res.StatusCode/100 != 2 {
+		return fmt.Errorf("Server returned %s", res.Status)
+	}
 
 	err := json.NewDecoder(bodyReader).Decode(dst)
 	if err != nil {
@@ -287,6 +292,7 @@ func ParseAPIResponse(dst interface{}, bodyReader io.ReadCloser) error {
 
 	errs := reflect.Indirect(reflect.ValueOf(dst)).FieldByName("Errors")
 	if errs.Len() > 0 {
+		// TODO: handle other errors too
 		return errors.New(errs.Index(0).String())
 	}
 
