@@ -105,7 +105,8 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 }
 
 type NewBuildResponse struct {
-	ID int64
+	ID       int64 `json:"id"`
+	ParentID int64 `json:"parent_id"`
 }
 
 func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse, err error) {
@@ -127,7 +128,7 @@ func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse,
 type BuildFileType string
 
 const (
-	BuildFileType_RECIPE    BuildFileType = "patch"
+	BuildFileType_PATCH     BuildFileType = "patch"
 	BuildFileType_ARCHIVE                 = "archive"
 	BuildFileType_SIGNATURE               = "signature"
 )
