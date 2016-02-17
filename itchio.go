@@ -106,8 +106,15 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 }
 
 type NewBuildResponse struct {
-	ID       int64 `json:"id"`
-	ParentID int64 `json:"parent_id"`
+	Response
+
+	Build struct {
+		ID          int64 `json:"id"`
+		UploadID    int64 `json:"upload_id"`
+		ParentBuild struct {
+			ID int64 `json:"id"`
+		} `json:"parent_build"`
+	}
 }
 
 func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse, err error) {
@@ -141,6 +148,8 @@ type BuildFile struct {
 }
 
 type ListBuildFilesResponse struct {
+	Response
+
 	Files []BuildFile
 }
 
@@ -157,8 +166,13 @@ func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err er
 }
 
 type NewBuildFileResponse struct {
-	ID        int64
-	UploadURL string
+	Response
+
+	File struct {
+		ID           int64
+		UploadURL    string            `json:"upload_url"`
+		UploadParams map[string]string `json:"upload_params"`
+	}
 }
 
 func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBuildFileResponse, err error) {
@@ -176,7 +190,9 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBu
 	return
 }
 
-type FinalizeBuildFileResponse struct{}
+type FinalizeBuildFileResponse struct {
+	Response
+}
 
 func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r FinalizeBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d", buildID, fileID)
@@ -227,7 +243,9 @@ const (
 
 type BuildEventData map[string]interface{}
 
-type NewBuildEventResponse struct{}
+type NewBuildEventResponse struct {
+	Response
+}
 
 func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, message string, data BuildEventData) (r NewBuildEventResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/events", buildID)
@@ -258,6 +276,8 @@ type BuildEvent struct {
 }
 
 type ListBuildEventsResponse struct {
+	Response
+
 	Events []BuildEvent
 }
 
