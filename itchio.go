@@ -295,11 +295,24 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 
 // Helpers
 
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(c.Key, "jwt:") {
+		req.Header.Add("Authorization", strings.Split(c.Key, ":")[1])
+	}
+	return http.DefaultClient.Do(req)
+}
+
 func (c *Client) MakePath(format string, a ...interface{}) string {
 	base := strings.Trim(c.BaseURL, "/")
 	subPath := strings.Trim(fmt.Sprintf(format, a...), "/")
 
-	return fmt.Sprintf("%s/%s/%s", base, c.Key, subPath)
+	var key string
+	if strings.HasPrefix(c.Key, "jwt:") {
+		key = "jwt"
+	} else {
+		key = c.Key
+	}
+	return fmt.Sprintf("%s/%s/%s", base, key, subPath)
 }
 
 func ParseAPIResponse(dst interface{}, res *http.Response) error {
