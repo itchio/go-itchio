@@ -240,6 +240,11 @@ func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadC
 		return
 	}
 
+	if dlResp.StatusCode != 200 {
+		err = fmt.Errorf("Can't download: %s", dlResp.Status)
+		return
+	}
+
 	reader = dlResp.Body
 	return
 }
