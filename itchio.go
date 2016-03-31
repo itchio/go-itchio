@@ -154,7 +154,7 @@ type ListBuildFilesResponse struct {
 }
 
 func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err error) {
-	path := c.MakePath("wharf/builds/%d/files")
+	path := c.MakePath("wharf/builds/%d/files", buildID)
 
 	resp, err := http.Get(path)
 	if err != nil {
