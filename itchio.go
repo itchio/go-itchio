@@ -60,7 +60,7 @@ type MyGamesResponse struct {
 func (c *Client) MyGames() (r MyGamesResponse, err error) {
 	path := c.MakePath("my-games")
 
-	resp, err := http.Get(path)
+	resp, err := c.Get(path)
 	if err != nil {
 		return
 	}
@@ -78,7 +78,7 @@ type GameUploadsResponse struct {
 func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 	path := c.MakePath("game/%d/uploads", gameID)
 
-	resp, err := http.Get(path)
+	resp, err := c.Get(path)
 	if err != nil {
 		return
 	}
@@ -96,7 +96,7 @@ type UploadDownloadResponse struct {
 func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err error) {
 	path := c.MakePath("upload/%d/download", uploadID)
 
-	resp, err := http.Get(path)
+	resp, err := c.Get(path)
 	if err != nil {
 		return
 	}
@@ -124,7 +124,7 @@ func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse,
 	form.Add("target", target)
 	form.Add("channel", channel)
 
-	resp, err := http.PostForm(path, form)
+	resp, err := c.PostForm(path, form)
 	if err != nil {
 		return
 	}
@@ -156,7 +156,7 @@ type ListBuildFilesResponse struct {
 func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files", buildID)
 
-	resp, err := http.Get(path)
+	resp, err := c.Get(path)
 	if err != nil {
 		return
 	}
@@ -181,7 +181,7 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBu
 	form := url.Values{}
 	form.Add("type", string(fileType))
 
-	resp, err := http.PostForm(path, form)
+	resp, err := c.PostForm(path, form)
 	if err != nil {
 		return
 	}
@@ -200,7 +200,7 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 	form := url.Values{}
 	form.Add("size", fmt.Sprintf("%d", size))
 
-	resp, err := http.PostForm(path, form)
+	resp, err := c.PostForm(path, form)
 	if err != nil {
 		return
 	}
@@ -209,27 +209,38 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 	return
 }
 
+type DownloadBuildFileResponse struct {
+	Response
+
+	URL string
+}
+
 func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadCloser, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
 
-	resp, err := http.Get(path)
+	resp, err := c.Get(path)
 	if err != nil {
 		return
 	}
 
-	if resp.StatusCode/100 != 3 {
-		err = fmt.Errorf("expected redirection")
-		return
-	}
-
-	dlPath := resp.Header.Get("Location")
-
-	req, err := http.NewRequest("GET", dlPath, nil)
+	var r DownloadBuildFileResponse
+	err = ParseAPIResponse(&r, resp)
 	if err != nil {
 		return
 	}
 
-	reader = req.Body
+	req, err := http.NewRequest("GET", r.URL, nil)
+	if err != nil {
+		return
+	}
+
+	// not an API request, going directly with http's DefaultClient
+	dlResp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return
+	}
+
+	reader = dlResp.Body
 	return
 }
 
@@ -260,7 +271,7 @@ func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, messa
 	}
 	form.Add("data", string(jsonData))
 
-	resp, err := http.PostForm(path, form)
+	resp, err := c.PostForm(path, form)
 	if err != nil {
 		return
 	}
@@ -284,7 +295,7 @@ type ListBuildEventsResponse struct {
 func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/events", buildID)
 
-	resp, err := http.Get(path)
+	resp, err := c.Get(path)
 	if err != nil {
 		return
 	}
@@ -294,6 +305,22 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 }
 
 // Helpers
+
+func (c *Client) Get(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(req)
+}
+
+func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
+	req, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(req)
+}
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(c.Key, "jwt:") {
