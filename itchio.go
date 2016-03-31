@@ -319,6 +319,7 @@ func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	return c.Do(req)
 }
 
