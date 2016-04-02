@@ -133,12 +133,103 @@ func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse,
 	return
 }
 
+type BuildFileInfo struct {
+	ID    int64
+	Size  int64
+	State BuildFileState
+
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type BuildInfo struct {
+	ID    int64
+	State BuildState
+
+	Files struct {
+		Patch     *BuildFileInfo
+		Signature *BuildFileInfo
+		Archive   *BuildFileInfo
+	}
+
+	User      User
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type ChannelInfo struct {
+	Name string
+	Tags string
+
+	Upload Upload
+	Head   *BuildInfo `json:"head"`
+}
+
+type ListChannelsResponse struct {
+	Response
+
+	Channels map[string]ChannelInfo
+}
+
+type GetChannelResponse struct {
+	Response
+
+	Channel ChannelInfo
+}
+
+func (c *Client) ListChannels(target string) (r ListChannelsResponse, err error) {
+	form := url.Values{}
+	form.Add("target", target)
+	path := c.MakePath("wharf/channels?%s", form.Encode())
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	return
+}
+
+func (c *Client) GetChannel(target string, channel string) (r GetChannelResponse, err error) {
+	query := (&url.Values{
+		target: []string{target},
+	}).Encode()
+	path := c.MakePath("wharf/channels/%s?%s", channel, query)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	return
+}
+
 type BuildFileType string
 
 const (
 	BuildFileType_PATCH     BuildFileType = "patch"
 	BuildFileType_ARCHIVE                 = "archive"
 	BuildFileType_SIGNATURE               = "signature"
+)
+
+type BuildState string
+
+const (
+	BuildState_STARTED    BuildState = "started"
+	BuildState_PROCESSING            = "processing"
+	BuildState_COMPLETED             = "completed"
+	BuildState_FAILED                = "failed"
+)
+
+type BuildFileState string
+
+const (
+	BuildFileState_CREATED   BuildFileState = "created"
+	BuildFileState_UPLOADING                = "uploading"
+	BuildFileState_UPLOADED                 = "uploaded"
+	BuildFileState_FAILED                   = "failed"
 )
 
 type BuildFile struct {
