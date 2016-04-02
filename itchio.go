@@ -51,6 +51,24 @@ func ClientWithKey(key string) *Client {
 	}
 }
 
+type StatusResponse struct {
+	Response
+
+	Success bool
+}
+
+func (c *Client) WharfStatus() (r StatusResponse, err error) {
+	path := c.MakePath("wharf/status")
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	return
+}
+
 type MyGamesResponse struct {
 	Response
 
