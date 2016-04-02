@@ -143,8 +143,9 @@ type BuildFileInfo struct {
 }
 
 type BuildInfo struct {
-	ID    int64
-	State BuildState
+	ID            int64
+	ParentBuildID int64 `json:"parent_build_id"`
+	State         BuildState
 
 	Files struct {
 		Patch     *BuildFileInfo
@@ -161,8 +162,9 @@ type ChannelInfo struct {
 	Name string
 	Tags string
 
-	Upload Upload
-	Head   *BuildInfo `json:"head"`
+	Upload  Upload
+	Head    *BuildInfo `json:"head"`
+	Pending *BuildInfo `json:"pending"`
 }
 
 type ListChannelsResponse struct {
@@ -192,10 +194,9 @@ func (c *Client) ListChannels(target string) (r ListChannelsResponse, err error)
 }
 
 func (c *Client) GetChannel(target string, channel string) (r GetChannelResponse, err error) {
-	query := (&url.Values{
-		target: []string{target},
-	}).Encode()
-	path := c.MakePath("wharf/channels/%s?%s", channel, query)
+	form := url.Values{}
+	form.Add("target", target)
+	path := c.MakePath("wharf/channels/%s?%s", channel, form.Encode())
 
 	resp, err := c.Get(path)
 	if err != nil {
@@ -440,6 +441,10 @@ func (c *Client) MakePath(format string, a ...interface{}) string {
 }
 
 func ParseAPIResponse(dst interface{}, res *http.Response) error {
+	if res == nil || res.Body == nil {
+		return fmt.Errorf("No response from server")
+	}
+
 	bodyReader := res.Body
 	defer bodyReader.Close()
 
