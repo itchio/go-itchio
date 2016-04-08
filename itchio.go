@@ -165,11 +165,7 @@ type BuildInfo struct {
 	ParentBuildID int64 `json:"parent_build_id"`
 	State         BuildState
 
-	Files struct {
-		Patch     *BuildFileInfo
-		Signature *BuildFileInfo
-		Archive   *BuildFileInfo
-	}
+	Files []*BuildFileInfo
 
 	User      User
 	CreatedAt string `json:"created_at"`
@@ -251,16 +247,10 @@ const (
 	BuildFileState_FAILED                   = "failed"
 )
 
-type BuildFile struct {
-	ID   int64
-	Type BuildFileType
-	Size int64
-}
-
 type ListBuildFilesResponse struct {
 	Response
 
-	Files []BuildFile
+	Files []BuildFileInfo
 }
 
 func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err error) {
