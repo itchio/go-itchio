@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -57,7 +58,7 @@ func defaultRetryPatterns() []time.Duration {
 func ClientWithKey(key string) *Client {
 	return &Client{
 		Key:           key,
-		HTTPClient:    &http.Client{},
+		HTTPClient:    http.DefaultClient,
 		BaseURL:       "https://itch.io/api/1",
 		RetryPatterns: defaultRetryPatterns(),
 	}
@@ -89,6 +90,7 @@ type MyGamesResponse struct {
 
 func (c *Client) MyGames() (r MyGamesResponse, err error) {
 	path := c.MakePath("my-games")
+	log.Printf("Requesting %s\n", path)
 
 	resp, err := c.Get(path)
 	if err != nil {
@@ -458,8 +460,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
-	for _, sleepTime := range c.RetryPatterns {
-		res, err = http.DefaultClient.Do(req)
+	retryPatterns := append(c.RetryPatterns, time.Millisecond)
+
+	for _, sleepTime := range retryPatterns {
+		res, err = c.HTTPClient.Do(req)
 		if res.StatusCode == 503 {
 			// Rate limited, try again according to pattern
 			res.Body.Close()

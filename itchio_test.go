@@ -13,8 +13,8 @@ import (
 
 func testTools(code int, body string) (*httptest.Server, *Client) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
 		fmt.Fprintln(w, body)
 	}))
 
