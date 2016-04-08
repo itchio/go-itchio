@@ -9,12 +9,14 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type Client struct {
-	Key        string
-	HTTPClient *http.Client
-	BaseURL    string
+	Key           string
+	HTTPClient    *http.Client
+	BaseURL       string
+	RetryPatterns []time.Duration
 }
 
 type Response struct {
@@ -43,11 +45,21 @@ type Upload struct {
 	Android bool `json:"p_android"`
 }
 
+func defaultRetryPatterns() []time.Duration {
+	return []time.Duration{
+		20 * time.Millisecond,
+		100 * time.Millisecond,
+		1000 * time.Millisecond,
+		2000 * time.Millisecond,
+	}
+}
+
 func ClientWithKey(key string) *Client {
 	return &Client{
-		Key:        key,
-		HTTPClient: &http.Client{},
-		BaseURL:    "https://itch.io/api/1",
+		Key:           key,
+		HTTPClient:    &http.Client{},
+		BaseURL:       "https://itch.io/api/1",
+		RetryPatterns: defaultRetryPatterns(),
 	}
 }
 
@@ -152,9 +164,11 @@ func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse,
 }
 
 type BuildFileInfo struct {
-	ID    int64
-	Size  int64
-	State BuildFileState
+	ID      int64
+	Size    int64
+	State   BuildFileState
+	Type    BuildFileType
+	SubType BuildFileSubType
 
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
@@ -227,6 +241,14 @@ const (
 	BuildFileType_PATCH     BuildFileType = "patch"
 	BuildFileType_ARCHIVE                 = "archive"
 	BuildFileType_SIGNATURE               = "signature"
+)
+
+type BuildFileSubType string
+
+const (
+	BuildFileSubType_DEFAULT   BuildFileSubType = "default"
+	BuildFileSubType_GZIP                       = "gzip"
+	BuildFileSubType_OPTIMIZED                  = "optimized"
 )
 
 type BuildState string
@@ -432,7 +454,22 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(c.Key, "jwt:") {
 		req.Header.Add("Authorization", strings.Split(c.Key, ":")[1])
 	}
-	return http.DefaultClient.Do(req)
+
+	var res *http.Response
+	var err error
+
+	for _, sleepTime := range c.RetryPatterns {
+		res, err = http.DefaultClient.Do(req)
+		if res.StatusCode == 503 {
+			// Rate limited, try again according to pattern
+			res.Body.Close()
+			time.Sleep(sleepTime)
+		} else {
+			break
+		}
+	}
+
+	return res, err
 }
 
 func (c *Client) MakePath(format string, a ...interface{}) string {

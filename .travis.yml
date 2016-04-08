@@ -1,0 +1,4 @@
+language: go
+
+go: 1.6
+go_import_path: github.com/itchio/go-itchio
