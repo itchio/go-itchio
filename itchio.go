@@ -149,12 +149,15 @@ type NewBuildResponse struct {
 	}
 }
 
-func (c *Client) CreateBuild(target string, channel string) (r NewBuildResponse, err error) {
+func (c *Client) CreateBuild(target string, channel string, userVersion string) (r NewBuildResponse, err error) {
 	path := c.MakePath("wharf/builds")
 
 	form := url.Values{}
 	form.Add("target", target)
 	form.Add("channel", channel)
+	if userVersion != "" {
+		form.Add("user_version", userVersion)
+	}
 
 	resp, err := c.PostForm(path, form)
 	if err != nil {
