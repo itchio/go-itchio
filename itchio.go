@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -48,10 +49,11 @@ type Upload struct {
 
 func defaultRetryPatterns() []time.Duration {
 	return []time.Duration{
-		20 * time.Millisecond,
-		100 * time.Millisecond,
-		1000 * time.Millisecond,
-		2000 * time.Millisecond,
+		1 * time.Second,
+		2 * time.Second,
+		4 * time.Second,
+		8 * time.Second,
+		16 * time.Second,
 	}
 }
 
@@ -468,9 +470,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	for _, sleepTime := range retryPatterns {
 		res, err = c.HTTPClient.Do(req)
 		if res.StatusCode == 503 {
-			// Rate limited, try again according to pattern
+			// Rate limited, try again according to patterns.
+			// following https://cloud.google.com/storage/docs/json_api/v1/how-tos/upload#exp-backoff to the letter
 			res.Body.Close()
-			time.Sleep(sleepTime)
+			time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
 		} else {
 			break
 		}
