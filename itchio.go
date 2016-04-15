@@ -311,7 +311,7 @@ type NewBuildFileResponse struct {
 	}
 }
 
-func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, fileSubType, subType BuildFileSubType, uploadType UploadType) (r NewBuildFileResponse, err error) {
+func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, subType BuildFileSubType, uploadType UploadType) (r NewBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files", buildID)
 
 	form := url.Values{}
