@@ -258,6 +258,13 @@ const (
 	BuildFileSubType_OPTIMIZED                  = "optimized"
 )
 
+type UploadType string
+
+const (
+	UploadType_MULTIPART UploadType = "multipart"
+	UploadType_RESUMABLE            = "resumable"
+)
+
 type BuildState string
 
 const (
@@ -304,11 +311,17 @@ type NewBuildFileResponse struct {
 	}
 }
 
-func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType) (r NewBuildFileResponse, err error) {
+func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, fileSubType, subType BuildFileSubType, uploadType UploadType) (r NewBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files", buildID)
 
 	form := url.Values{}
 	form.Add("type", string(fileType))
+	if subType != "" {
+		form.Add("sub_type", string(subType))
+	}
+	if uploadType != "" {
+		form.Add("upload_type", string(uploadType))
+	}
 
 	resp, err := c.PostForm(path, form)
 	if err != nil {
