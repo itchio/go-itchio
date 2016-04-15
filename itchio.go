@@ -174,8 +174,8 @@ type BuildFileInfo struct {
 	ID      int64
 	Size    int64
 	State   BuildFileState
-	Type    BuildFileType
-	SubType BuildFileSubType
+	Type    BuildFileType    `json:"type"`
+	SubType BuildFileSubType `json:"sub_type"`
 
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
