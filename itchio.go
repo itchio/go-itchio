@@ -19,6 +19,27 @@ type Client struct {
 	HTTPClient    *http.Client
 	BaseURL       string
 	RetryPatterns []time.Duration
+	UserAgent     string
+}
+
+func defaultRetryPatterns() []time.Duration {
+	return []time.Duration{
+		1 * time.Second,
+		2 * time.Second,
+		4 * time.Second,
+		8 * time.Second,
+		16 * time.Second,
+	}
+}
+
+func ClientWithKey(key string) *Client {
+	return &Client{
+		Key:           key,
+		HTTPClient:    http.DefaultClient,
+		BaseURL:       "https://itch.io/api/1",
+		RetryPatterns: defaultRetryPatterns(),
+		UserAgent:     "go-itchio",
+	}
 }
 
 type Response struct {
@@ -45,25 +66,6 @@ type Upload struct {
 	Linux   bool `json:"p_linux"`
 	Windows bool `json:"p_windows"`
 	Android bool `json:"p_android"`
-}
-
-func defaultRetryPatterns() []time.Duration {
-	return []time.Duration{
-		1 * time.Second,
-		2 * time.Second,
-		4 * time.Second,
-		8 * time.Second,
-		16 * time.Second,
-	}
-}
-
-func ClientWithKey(key string) *Client {
-	return &Client{
-		Key:           key,
-		HTTPClient:    http.DefaultClient,
-		BaseURL:       "https://itch.io/api/1",
-		RetryPatterns: defaultRetryPatterns(),
-	}
 }
 
 type StatusResponse struct {
@@ -474,6 +476,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(c.Key, "jwt:") {
 		req.Header.Add("Authorization", strings.Split(c.Key, ":")[1])
 	}
+	req.Header.Set("User-Agent", c.UserAgent)
 
 	var res *http.Response
 	var err error
