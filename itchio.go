@@ -2,7 +2,6 @@ package itchio
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -485,6 +484,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 	for _, sleepTime := range retryPatterns {
 		res, err = c.HTTPClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
 		if res.StatusCode == 503 {
 			// Rate limited, try again according to patterns.
 			// following https://cloud.google.com/storage/docs/json_api/v1/how-tos/upload#exp-backoff to the letter
@@ -531,7 +534,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	errs := reflect.Indirect(reflect.ValueOf(dst)).FieldByName("Errors")
 	if errs.Len() > 0 {
 		// TODO: handle other errors too
-		return errors.New(errs.Index(0).String())
+		return fmt.Errorf("itch.io API error: %s", errs.Index(0).String())
 	}
 
 	return nil
