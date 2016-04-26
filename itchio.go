@@ -428,6 +428,28 @@ func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, messa
 	return
 }
 
+type CreateBuildFailureResponse struct {
+	Response
+}
+
+func (c *Client) CreateBuildFailure(buildID int64, message string, fatal bool) (r CreateBuildFailureResponse, err error) {
+	path := c.MakePath("wharf/builds/%d/failures", buildID)
+
+	form := url.Values{}
+	form.Add("message", message)
+	if fatal {
+		form.Add("fatal", fmt.Sprintf("%v", fatal))
+	}
+
+	resp, err := c.PostForm(path, form)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	return
+}
+
 type BuildEvent struct {
 	Type    BuildEventType
 	Message string
