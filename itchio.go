@@ -507,6 +507,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	for _, sleepTime := range retryPatterns {
 		res, err = c.HTTPClient.Do(req)
 		if err != nil {
+			if strings.Contains(err.Error(), "TLS handshake timeout") {
+				time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
+				continue
+			}
 			return nil, err
 		}
 
@@ -515,9 +519,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 			// following https://cloud.google.com/storage/docs/json_api/v1/how-tos/upload#exp-backoff to the letter
 			res.Body.Close()
 			time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
-		} else {
-			break
+			continue
 		}
+
+		break
 	}
 
 	return res, err
