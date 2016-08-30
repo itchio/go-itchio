@@ -263,8 +263,9 @@ const (
 type UploadType string
 
 const (
-	UploadType_MULTIPART UploadType = "multipart"
-	UploadType_RESUMABLE            = "resumable"
+	UploadType_MULTIPART          UploadType = "multipart"
+	UploadType_RESUMABLE                     = "resumable"
+	UploadType_DEFERRED_RESUMABLE            = "deferred_resumable"
 )
 
 type BuildState string
@@ -307,9 +308,10 @@ type NewBuildFileResponse struct {
 	Response
 
 	File struct {
-		ID           int64
-		UploadURL    string            `json:"upload_url"`
-		UploadParams map[string]string `json:"upload_params"`
+		ID            int64
+		UploadURL     string            `json:"upload_url"`
+		UploadParams  map[string]string `json:"upload_params"`
+		UploadHeaders map[string]string `json:"upload_headers"`
 	}
 }
 
