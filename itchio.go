@@ -2,6 +2,7 @@ package itchio
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -358,6 +359,10 @@ type DownloadBuildFileResponse struct {
 	URL string
 }
 
+var (
+	BuildFileNotFound = errors.New("build file not found in storage")
+)
+
 func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadCloser, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
 
@@ -383,12 +388,18 @@ func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadC
 		return
 	}
 
-	if dlResp.StatusCode != 200 {
-		err = fmt.Errorf("Can't download: %s", dlResp.Status)
+	if dlResp.StatusCode == 200 {
+		reader = dlResp.Body
 		return
 	}
 
-	reader = dlResp.Body
+	dlResp.Body.Close()
+
+	if dlResp.StatusCode == 404 {
+		err = BuildFileNotFound
+	} else {
+		err = fmt.Errorf("Can't download: %s", dlResp.Status)
+	}
 	return
 }
 
