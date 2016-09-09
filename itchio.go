@@ -250,6 +250,7 @@ const (
 	BuildFileType_PATCH     BuildFileType = "patch"
 	BuildFileType_ARCHIVE                 = "archive"
 	BuildFileType_SIGNATURE               = "signature"
+	BuildFileType_MANIFEST                = "manifest"
 )
 
 type BuildFileSubType string
