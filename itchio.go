@@ -33,13 +33,19 @@ func defaultRetryPatterns() []time.Duration {
 }
 
 func ClientWithKey(key string) *Client {
-	return &Client{
+	c := &Client{
 		Key:           key,
 		HTTPClient:    http.DefaultClient,
-		BaseURL:       "https://itch.io/api/1",
 		RetryPatterns: defaultRetryPatterns(),
 		UserAgent:     "go-itchio",
 	}
+	c.SetServer("https://itch.io")
+	return c
+}
+
+func (c *Client) SetServer(itchioServer string) *Client {
+	c.BaseURL = fmt.Sprintf("%s/api/1", itchioServer)
+	return c
 }
 
 type Response struct {
