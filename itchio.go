@@ -372,6 +372,22 @@ var (
 	BuildFileNotFound = errors.New("build file not found in storage")
 )
 
+func (c *Client) GetBuildFileDownloadURL(buildID int64, fileID int64) (r DownloadBuildFileResponse, err error) {
+	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadCloser, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
 
