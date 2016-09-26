@@ -53,3 +53,19 @@ func Test_MyGames(t *testing.T) {
 	assert.Equal(t, games.Games[0].ID, int64(123))
 	assert.Equal(t, games.Games[0].Url, "https://kenney.itch.io/barb")
 }
+
+func Test_ParseSpec(t *testing.T) {
+	var target, channel string
+	var err error
+
+	target, channel, err = ParseSpec("user/page:channel")
+	assert.Nil(t, err)
+	assert.Equal(t, target, "user/page")
+	assert.Equal(t, channel, "channel")
+
+	_, _, err = ParseSpec("user/page")
+	assert.NotNil(t, err)
+
+	_, _, err = ParseSpec("a:b:c")
+	assert.NotNil(t, err)
+}
