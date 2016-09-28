@@ -605,7 +605,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 
 func FindBuildFile(fileType BuildFileType, files []*BuildFileInfo) *BuildFileInfo {
 	for _, f := range files {
-		if f.Type == fileType {
+		if f.Type == fileType && f.State == BuildFileState_UPLOADED {
 			return f
 		}
 	}
