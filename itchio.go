@@ -428,6 +428,50 @@ func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadC
 	return
 }
 
+type DownloadUploadBuildResponseItem struct {
+	URL string
+}
+
+type DownloadUploadBuildResponse struct {
+	Response
+
+	Patch     DownloadUploadBuildResponseItem
+	Signature DownloadUploadBuildResponseItem
+	Manifest  DownloadUploadBuildResponseItem
+}
+
+func (c *Client) DownloadUploadBuild(uploadID int64, buildID int64) (r DownloadUploadBuildResponse, err error) {
+	path := c.MakePath("/upload/%d/download/builds/%d", uploadID, buildID)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (c *Client) DownloadUploadBuildWithKey(downloadKey string, uploadID int64, buildID int64) (r DownloadUploadBuildResponse, err error) {
+	path := c.MakePath("/download-key/%s/download/%d/builds/%d", downloadKey, uploadID, buildID)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 type BuildEventType string
 
 const (
