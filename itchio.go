@@ -435,9 +435,10 @@ type DownloadUploadBuildResponseItem struct {
 type DownloadUploadBuildResponse struct {
 	Response
 
-	Patch     DownloadUploadBuildResponseItem
-	Signature DownloadUploadBuildResponseItem
-	Manifest  DownloadUploadBuildResponseItem
+	Patch     *DownloadUploadBuildResponseItem
+	Signature *DownloadUploadBuildResponseItem
+	Manifest  *DownloadUploadBuildResponseItem
+	Archive   *DownloadUploadBuildResponseItem
 }
 
 func (c *Client) DownloadUploadBuild(uploadID int64, buildID int64) (r DownloadUploadBuildResponse, err error) {
