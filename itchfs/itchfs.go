@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	itchio "github.com/itchio/go-itchio"
+	"github.com/itchio/httpfile"
 )
 
 type ItchFS struct {
@@ -16,31 +17,21 @@ func (ifs *ItchFS) Scheme() string {
 	return "itchfs"
 }
 
-type GetURLFunc func() (string, error)
-
-type itchfsResource struct {
-	getURL GetURLFunc
-}
-
-func (ir *itchfsResource) GetURL() (string, error) {
-	return ir.getURL()
-}
-
-func (ir *itchfsResource) NeedsRenewal(req *http.Request) bool {
+func needsRenewal(req *http.Request) bool {
 	// FIXME: stub
 	return true
 }
 
-func (ifs *ItchFS) MakeResource(u *url.URL) (*itchfsResource, error) {
+func (ifs *ItchFS) MakeResource(u *url.URL) (httpfile.GetURLFunc, httpfile.NeedsRenewalFunc, error) {
 	if u.Host != "" {
-		return nil, fmt.Errorf("invalid itchfs URL (must start with itchfs:///): %s", u.String())
+		return nil, nil, fmt.Errorf("invalid itchfs URL (must start with itchfs:///): %s", u.String())
 	}
 
 	vals := u.Query()
 
 	apiKey := vals.Get("api_key")
 	if apiKey == "" {
-		return nil, fmt.Errorf("missing API key")
+		return nil, nil, fmt.Errorf("missing API key")
 	}
 
 	itchClient := itchio.ClientWithKey(apiKey)
@@ -50,13 +41,13 @@ func (ifs *ItchFS) MakeResource(u *url.URL) (*itchfsResource, error) {
 
 	source, err := ObtainSource(itchClient, u.Path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	getURL, err := source.makeGetURL()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &itchfsResource{getURL}, nil
+	return getURL, needsRenewal, nil
 }

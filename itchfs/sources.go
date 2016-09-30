@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-errors/errors"
 	itchio "github.com/itchio/go-itchio"
+	"github.com/itchio/httpfile"
 )
 
 // over-engineering follows
@@ -57,10 +58,10 @@ func ObtainSource(itchClient *itchio.Client, itchPath string) (*Source, error) {
 	return nil, fmt.Errorf("unrecognized itchfs pattern: %s", itchPath)
 }
 
-func (s *Source) makeGetURL() (GetURLFunc, error) {
+func (s *Source) makeGetURL() (httpfile.GetURLFunc, error) {
 	tokens := strings.Split(s.Path, "/")
 
-	var getter GetURLFunc
+	var getter httpfile.GetURLFunc
 
 	switch s.Type {
 	case SourceType_DownloadBuild:
