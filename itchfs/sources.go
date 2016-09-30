@@ -83,6 +83,48 @@ func (s *Source) makeGetURL() (httpfile.GetURLFunc, error) {
 
 			return r.Archive.URL, nil
 		}
+	case SourceType_KeyDownloadBuild:
+		downloadKey := tokens[2]
+
+		uploadID, err := strconv.ParseInt(tokens[4], 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, 1)
+		}
+
+		buildID, err := strconv.ParseInt(tokens[6], 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, 1)
+		}
+
+		getter = func() (string, error) {
+			r, err := s.ItchClient.DownloadUploadBuildWithKey(downloadKey, uploadID, buildID)
+			if err != nil {
+				return "", err
+			}
+
+			return r.Archive.URL, nil
+		}
+	case SourceType_WharfDownloadBuild:
+		buildID, err := strconv.ParseInt(tokens[3], 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, 1)
+		}
+
+		buildFileID, err := strconv.ParseInt(tokens[5], 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, 1)
+		}
+
+		getter = func() (string, error) {
+			r, err := s.ItchClient.GetBuildFileDownloadURL(buildID, buildFileID)
+			if err != nil {
+				return "", err
+			}
+
+			return r.URL, nil
+		}
+	default:
+		return nil, fmt.Errorf("unsupported source type: %d", s.Type)
 	}
 
 	return getter, nil
