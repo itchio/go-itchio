@@ -43,6 +43,9 @@ func (ifs *ItchFS) MakeResource(u *url.URL) (*itchfsResource, error) {
 	}
 
 	itchClient := itchio.ClientWithKey(apiKey)
+	if ifs.ItchServer != "" {
+		itchClient.SetServer(ifs.ItchServer)
+	}
 
 	source, err := ObtainSource(itchClient, u.Path)
 	if err != nil {
