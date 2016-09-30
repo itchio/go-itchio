@@ -2,6 +2,7 @@ package itchfs
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
 	itchio "github.com/itchio/go-itchio"
@@ -25,7 +26,7 @@ func (ir *itchfsResource) GetURL() (string, error) {
 	return ir.getURL()
 }
 
-func (ir *itchfsResource) NeedsRenewal() bool {
+func (ir *itchfsResource) NeedsRenewal(req *http.Request) bool {
 	// FIXME: stub
 	return true
 }
