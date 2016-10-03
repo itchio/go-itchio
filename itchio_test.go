@@ -55,17 +55,22 @@ func Test_MyGames(t *testing.T) {
 }
 
 func Test_ParseSpec(t *testing.T) {
-	var target, channel string
+	var spec *Spec
 	var err error
 
-	target, channel, err = ParseSpec("user/page:channel")
+	spec, err = ParseSpec("user/page:channel")
 	assert.Nil(t, err)
-	assert.Equal(t, target, "user/page")
-	assert.Equal(t, channel, "channel")
+	assert.Equal(t, spec.Target, "user/page")
+	assert.Equal(t, spec.Channel, "channel")
 
-	_, _, err = ParseSpec("user/page")
+	spec, err = ParseSpec("user/page")
+	assert.Nil(t, err)
+	assert.Equal(t, spec.Target, "user/page")
+	assert.Equal(t, spec.Channel, "")
+
+	err = spec.EnsureChannel()
 	assert.NotNil(t, err)
 
-	_, _, err = ParseSpec("a:b:c")
+	spec, err = ParseSpec("a:b:c")
 	assert.NotNil(t, err)
 }
