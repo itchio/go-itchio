@@ -33,6 +33,9 @@ func Test_Resource(t *testing.T) {
 		"/api/1/x/upload/13/download": `{
 			"url": "http://localhost/upload-url"
 		}`,
+		"/api/1/x/download-key/key/download/13": `{
+			"url": "http://localhost/upload-url-with-key"
+		}`,
 		"/api/1/x/upload/13/download/builds/57": `{
 			"archive": {
 				"url": "http://localhost/upload-builds-url-archive"
@@ -89,6 +92,7 @@ func Test_Resource(t *testing.T) {
 	testFail("itchfs:///upload/13/download?no_api_key=true")
 	testFail("itchfs:///upload/NaN/download?api_key=x")
 	testFail("itchfs:///upload/NaN/download/builds/13/archive?api_key=x")
+	testFail("itchfs:///download-key/key/download/NaN?api_key=x")
 	testFail("itchfs:///upload/13/download/builds/NaN/archive?api_key=x")
 	testFail("itchfs:///download-key/key/download/NaN/builds/57/archive?api_key=x")
 	testFail("itchfs:///download-key/key/download/13/builds/NaN/archive?api_key=x")
@@ -119,6 +123,7 @@ func Test_Resource(t *testing.T) {
 	}
 
 	testPair("itchfs:///upload/13/download?api_key=x", "http://localhost/upload-url")
+	testPair("itchfs:///download-key/key/download/13?api_key=x", "http://localhost/upload-url-with-key")
 	testPair("itchfs:///upload/13/download/builds/57/archive?api_key=x", "http://localhost/upload-builds-url-archive")
 	testPair("itchfs:///upload/13/download/builds/57/patch?api_key=x", "http://localhost/upload-builds-url-patch")
 	testPair("itchfs:///download-key/key/download/13/builds/57/signature?api_key=x", "http://localhost/upload-builds-url-with-key-signature")
