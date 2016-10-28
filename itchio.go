@@ -675,8 +675,14 @@ func FindBuildFile(fileType BuildFileType, files []*BuildFileInfo) *BuildFileInf
 // ItchfsURL returns the itchfs:/// url usable to download a given file
 // from a given build
 func (build BuildInfo) ItchfsURL(file *BuildFileInfo, apiKey string) string {
+	return ItchfsURL(build.ID, file.ID, apiKey)
+}
+
+// ItchfsURL returns the itchfs:/// url usable to download a given file
+// from a given build
+func ItchfsURL(buildID int64, fileID int64, apiKey string) string {
 	values := url.Values{}
 	values.Set("api_key", apiKey)
 	return fmt.Sprintf("itchfs:///wharf/builds/%d/files/%d/download?%s",
-		build.ID, file.ID, values.Encode())
+		buildID, fileID, values.Encode())
 }
