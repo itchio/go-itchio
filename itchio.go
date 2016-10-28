@@ -660,6 +660,8 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	return nil
 }
 
+// FindBuildFile looks for an uploaded file of the right type
+// in a list of file. Returns nil if it can't find one.
 func FindBuildFile(fileType BuildFileType, files []*BuildFileInfo) *BuildFileInfo {
 	for _, f := range files {
 		if f.Type == fileType && f.State == BuildFileState_UPLOADED {
@@ -668,4 +670,13 @@ func FindBuildFile(fileType BuildFileType, files []*BuildFileInfo) *BuildFileInf
 	}
 
 	return nil
+}
+
+// ItchfsURL returns the itchfs:/// url usable to download a given file
+// from a given build
+func (build BuildInfo) ItchfsURL(file *BuildFileInfo, apiKey string) string {
+	values := url.Values{}
+	values.Set("api_key", apiKey)
+	return fmt.Sprintf("itchfs:///wharf/builds/%d/files/%d/download?%s",
+		build.ID, file.ID, values.Encode())
 }
