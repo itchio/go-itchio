@@ -488,9 +488,7 @@ func (c *Client) DownloadUploadBuildWithKey(downloadKey string, uploadID int64, 
 type BuildEventType string
 
 const (
-	BuildEvent_JOB_STARTED   BuildEventType = "job_started"
-	BuildEvent_JOB_FAILED                   = "job_failed"
-	BuildEvent_JOB_COMPLETED                = "job_completed"
+	BuildEvent_LOG BuildEventType = "log"
 )
 
 type BuildEventData map[string]interface{}
