@@ -1,19 +1,20 @@
 package itchio
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/go-errors/errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
-	"bytes"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/go-errors/errors"
 )
 
 type Client struct {
@@ -66,9 +67,11 @@ type Game struct {
 }
 
 type Upload struct {
-	ID       int64
-	Filename string
-	Size     int64
+	ID          int64
+	Filename    string
+	Size        int64
+	ChannelName string `json:"channel_name"`
+	Build       *BuildInfo
 
 	OSX     bool `json:"p_osx"`
 	Linux   bool `json:"p_linux"`
@@ -116,7 +119,7 @@ func (c *Client) MyGames() (r MyGamesResponse, err error) {
 type GameUploadsResponse struct {
 	Response
 
-	Uploads []Upload `json:"uploads"`
+	Uploads []*Upload `json:"uploads"`
 }
 
 func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
@@ -207,6 +210,9 @@ type BuildInfo struct {
 	ID            int64
 	ParentBuildID int64 `json:"parent_build_id"`
 	State         BuildState
+
+	Version     int64
+	UserVersion string `json:"user_version"`
 
 	Files []*BuildFileInfo
 
@@ -642,15 +648,15 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 		return fmt.Errorf("Server returned %s for %s", res.Status, res.Request.URL.String())
 	}
 
-    body, err := ioutil.ReadAll(bodyReader)
-    if err != nil {
+	body, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
 		return errors.Wrap(err, 1)
-    }
+	}
 
 	err = json.NewDecoder(bytes.NewReader(body)).Decode(dst)
 	if err != nil {
-        msg := fmt.Sprintf("JSON decode error: %s\n\nBody: %s\n\n", err.Error(), string(body))
-        return errors.Wrap(errors.New(msg), 1)
+		msg := fmt.Sprintf("JSON decode error: %s\n\nBody: %s\n\n", err.Error(), string(body))
+		return errors.Wrap(errors.New(msg), 1)
 	}
 
 	errs := reflect.Indirect(reflect.ValueOf(dst)).FieldByName("Errors")
