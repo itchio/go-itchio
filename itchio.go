@@ -145,7 +145,14 @@ func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err e
 }
 
 func (c *Client) UploadDownloadWithKey(downloadKey string, uploadID int64) (r UploadDownloadResponse, err error) {
-	values := url.Values{}
+	return c.UploadDownloadWithKeyAndValues(downloadKey, uploadID, nil)
+}
+
+func (c *Client) UploadDownloadWithKeyAndValues(downloadKey string, uploadID int64, values url.Values) (r UploadDownloadResponse, err error) {
+	if values == nil {
+		values = url.Values{}
+	}
+
 	if downloadKey != "" {
 		values.Add("download_key_id", downloadKey)
 	}
@@ -393,7 +400,14 @@ var (
 )
 
 func (c *Client) GetBuildFileDownloadURL(buildID int64, fileID int64) (r DownloadBuildFileResponse, err error) {
+	return c.GetBuildFileDownloadURLWithValues(buildID, fileID, nil)
+}
+
+func (c *Client) GetBuildFileDownloadURLWithValues(buildID int64, fileID int64, values url.Values) (r DownloadBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
+	if values != nil {
+		path = path + "?" + values.Encode()
+	}
 
 	resp, err := c.Get(path)
 	if err != nil {
@@ -466,7 +480,14 @@ func (c *Client) DownloadUploadBuild(uploadID int64, buildID int64) (r DownloadU
 }
 
 func (c *Client) DownloadUploadBuildWithKey(downloadKey string, uploadID int64, buildID int64) (r DownloadUploadBuildResponse, err error) {
-	values := url.Values{}
+	return c.DownloadUploadBuildWithKeyAndValues("", uploadID, buildID, nil)
+}
+
+func (c *Client) DownloadUploadBuildWithKeyAndValues(downloadKey string, uploadID int64, buildID int64, values url.Values) (r DownloadUploadBuildResponse, err error) {
+	if values == nil {
+		values = url.Values{}
+	}
+
 	if downloadKey != "" {
 		values.Add("download_key_id", downloadKey)
 	}
