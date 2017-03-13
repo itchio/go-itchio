@@ -38,6 +38,9 @@ func Test_Resource(t *testing.T) {
 		"/api/1/x/upload/13/download?download_key_id=key": `{
 			"url": "http://localhost/upload-url-with-key"
 		}`,
+		"/api/1/x/upload/13/download?download_key_id=key&secret=sauce": `{
+			"url": "http://localhost/upload-url-with-key-and-secret"
+		}`,
 		"/api/1/x/upload/13/download/builds/57": `{
 			"archive": {
 				"url": "http://localhost/upload-builds-url-archive"
@@ -142,4 +145,7 @@ func Test_Resource(t *testing.T) {
 	testPair("itchfs:///upload/13/download/builds/57/manifest?api_key=x&download_key_id=key", "http://localhost/upload-builds-url-with-key-manifest")
 
 	testPair("itchfs:///wharf/builds/57/files/90/download?api_key=x", "http://localhost/wharf-build-url")
+
+	testPair("itchfs:///upload/13/download?api_key=x&download_key_id=key&secret=sauce", "http://localhost/upload-url-with-key-and-secret")
+	testFailGetter("itchfs:///upload/13/download?api_key=x&download_key_id=key&secret=butt")
 }
