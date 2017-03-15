@@ -284,6 +284,7 @@ const (
 	BuildFileType_ARCHIVE                 = "archive"
 	BuildFileType_SIGNATURE               = "signature"
 	BuildFileType_MANIFEST                = "manifest"
+	BuildFileType_UNPACKED                = "unpacked"
 )
 
 type BuildFileSubType string
@@ -359,6 +360,30 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, subType 
 	}
 	if uploadType != "" {
 		form.Add("upload_type", string(uploadType))
+	}
+
+	resp, err := c.PostForm(path, form)
+	if err != nil {
+		return
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	return
+}
+
+func (c *Client) CreateBuildFileWithName(buildID int64, fileType BuildFileType, subType BuildFileSubType, uploadType UploadType, name string) (r NewBuildFileResponse, err error) {
+	path := c.MakePath("wharf/builds/%d/files", buildID)
+
+	form := url.Values{}
+	form.Add("type", string(fileType))
+	if subType != "" {
+		form.Add("sub_type", string(subType))
+	}
+	if uploadType != "" {
+		form.Add("upload_type", string(uploadType))
+	}
+	if name != "" {
+		form.Add("filename", name)
 	}
 
 	resp, err := c.PostForm(path, form)
