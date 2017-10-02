@@ -3,7 +3,7 @@ package itchio
 // Response is what the itch.io API replies with. It may
 // include one or several errors
 type Response struct {
-	Errors []string
+	Errors []string `json:"errors"`
 }
 
 // WharfStatusResponse is what the API responds with when we ask for
@@ -11,7 +11,7 @@ type Response struct {
 type WharfStatusResponse struct {
 	Response
 
-	Success bool
+	Success bool `json:"success"`
 }
 
 // ListMyGamesResponse is what the API server answers when we ask for what games
@@ -19,7 +19,7 @@ type WharfStatusResponse struct {
 type ListMyGamesResponse struct {
 	Response
 
-	Games []Game
+	Games []*Game `json:"games"`
 }
 
 // ListChannelsResponse is what the API responds with when we ask for all the
@@ -27,14 +27,14 @@ type ListMyGamesResponse struct {
 type ListChannelsResponse struct {
 	Response
 
-	Channels map[string]ChannelInfo
+	Channels map[string]*Channel `json:"channels"`
 }
 
 // GetChannelResponse is what the API responds with when we ask info about a channel
 type GetChannelResponse struct {
 	Response
 
-	Channel ChannelInfo
+	Channel *Channel `json:"channel"`
 }
 
 // ListBuildFilesResponse is what the API responds with when we ask for the files
@@ -42,19 +42,22 @@ type GetChannelResponse struct {
 type ListBuildFilesResponse struct {
 	Response
 
-	Files []*BuildFileInfo
+	Files []*BuildFile `json:"files"`
 }
 
 // CreateBuildFileResponse is what the API responds when we create a new build file
 type CreateBuildFileResponse struct {
 	Response
 
-	File struct {
-		ID            int64
-		UploadURL     string            `json:"uploadUrl"`
-		UploadParams  map[string]string `json:"uploadParams"`
-		UploadHeaders map[string]string `json:"uploadHeaders"`
-	}
+	File *FileUploadSpec `json:"file"`
+}
+
+// FileUploadSpec contains the info needed to upload one specific build file
+type FileUploadSpec struct {
+	ID            int64             `json:"id"`
+	UploadURL     string            `json:"uploadUrl"`
+	UploadParams  map[string]string `json:"uploadParams"`
+	UploadHeaders map[string]string `json:"uploadHeaders"`
 }
 
 // FinalizeBuildFileResponse is what the API responds when we finalize a build file
@@ -65,7 +68,7 @@ type FinalizeBuildFileResponse struct {
 // DownloadUploadBuildResponseItem contains download information for a specific
 // build file
 type DownloadUploadBuildResponseItem struct {
-	URL string
+	URL string `json:"url"`
 }
 
 // DownloadUploadBuildResponse is what the API responds when we want to download
@@ -74,13 +77,13 @@ type DownloadUploadBuildResponse struct {
 	Response
 
 	// Patch is the download info for the wharf patch, if any
-	Patch *DownloadUploadBuildResponseItem
+	Patch *DownloadUploadBuildResponseItem `json:"patch"`
 	// Signature is the download info for the wharf signature, if any
-	Signature *DownloadUploadBuildResponseItem
+	Signature *DownloadUploadBuildResponseItem `json:"signature"`
 	// Manifest is reserved
-	Manifest *DownloadUploadBuildResponseItem
+	Manifest *DownloadUploadBuildResponseItem `json:"manifest"`
 	// Archive is the download info for the .zip archive, if any
-	Archive *DownloadUploadBuildResponseItem
+	Archive *DownloadUploadBuildResponseItem `json:"archive"`
 }
 
 // CreateBuildEventResponse is what the API responds with when you create a new build event
@@ -97,5 +100,5 @@ type CreateBuildFailureResponse struct {
 type ListBuildEventsResponse struct {
 	Response
 
-	Events []BuildEvent
+	Events []*BuildEvent `json:"events"`
 }
