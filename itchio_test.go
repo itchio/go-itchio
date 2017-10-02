@@ -47,7 +47,7 @@ func Test_ListMyGames(t *testing.T) {
 	defer server.Close()
 
 	games, err := client.ListMyGames()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.EqualValues(t, len(games.Errors), 0)
 	assert.EqualValues(t, len(games.Games), 2)
 	assert.EqualValues(t, games.Games[0].ID, 123)
@@ -60,18 +60,18 @@ func Test_ParseSpec(t *testing.T) {
 	var err error
 
 	spec, err = ParseSpec("user/page:channel")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, spec.Target, "user/page")
 	assert.Equal(t, spec.Channel, "channel")
 
 	spec, err = ParseSpec("user/page")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, spec.Target, "user/page")
 	assert.Equal(t, spec.Channel, "")
 
 	err = spec.EnsureChannel()
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 
 	spec, err = ParseSpec("a:b:c")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }

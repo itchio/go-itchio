@@ -1,17 +1,12 @@
 package itchio
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
-	"reflect"
-	"strings"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -177,21 +172,7 @@ func (c *Client) CreateBuild(target string, channel string, userVersion string) 
 	return
 }
 
-// ListChannelsResponse is what the API responds with when we ask for all the
-// channels of a particular game
-type ListChannelsResponse struct {
-	Response
-
-	Channels map[string]ChannelInfo
-}
-
-// GetChannelResponse
-type GetChannelResponse struct {
-	Response
-
-	Channel ChannelInfo
-}
-
+// ListChannels returns a list of the channels for a game
 func (c *Client) ListChannels(target string) (r ListChannelsResponse, err error) {
 	form := url.Values{}
 	form.Add("target", target)
@@ -206,6 +187,7 @@ func (c *Client) ListChannels(target string) (r ListChannelsResponse, err error)
 	return
 }
 
+// GetChannel returns information about a given channel for a given game
 func (c *Client) GetChannel(target string, channel string) (r GetChannelResponse, err error) {
 	form := url.Values{}
 	form.Add("target", target)
@@ -220,56 +202,85 @@ func (c *Client) GetChannel(target string, channel string) (r GetChannelResponse
 	return
 }
 
+// BuildFileType describes the type of a build file: patch, archive, signature, etc.
 type BuildFileType string
 
 const (
-	BuildFileType_PATCH     BuildFileType = "patch"
-	BuildFileType_ARCHIVE                 = "archive"
-	BuildFileType_SIGNATURE               = "signature"
-	BuildFileType_MANIFEST                = "manifest"
-	BuildFileType_UNPACKED                = "unpacked"
+	// BuildFileTypePatch describes wharf patch files (.pwr)
+	BuildFileTypePatch BuildFileType = "patch"
+	// BuildFileTypeArchive describes canonical archive form (.zip)
+	BuildFileTypeArchive = "archive"
+	// BuildFileTypeSignature describes wharf signature files (.pws)
+	BuildFileTypeSignature = "signature"
+	// BuildFileTypeManifest is reserved
+	BuildFileTypeManifest = "manifest"
+	// BuildFileTypeUnpacked describes the single file that is in the build (if it was just a single file)
+	BuildFileTypeUnpacked = "unpacked"
 )
 
+// BuildFileSubType describes the subtype of a build file: mostly its compression
+// level. For example, rediff'd patches are "optimized", whereas initial patches are "default"
 type BuildFileSubType string
 
 const (
-	BuildFileSubType_DEFAULT   BuildFileSubType = "default"
-	BuildFileSubType_GZIP                       = "gzip"
-	BuildFileSubType_OPTIMIZED                  = "optimized"
+	// BuildFileSubTypeDefault describes default compression (rsync patches)
+	BuildFileSubTypeDefault BuildFileSubType = "default"
+	// BuildFileSubTypeGzip is reserved
+	BuildFileSubTypeGzip = "gzip"
+	// BuildFileSubTypeOptimized describes optimized compression (rediff'd / bsdiff patches)
+	BuildFileSubTypeOptimized = "optimized"
 )
 
+// UploadType describes which strategy is used for uploading to storage
+// some types allow for uploading in blocks (which is resumable), some
+// expect the whole payload in one request.
 type UploadType string
 
 const (
-	UploadType_MULTIPART          UploadType = "multipart"
-	UploadType_RESUMABLE                     = "resumable"
-	UploadType_DEFERRED_RESUMABLE            = "deferred_resumable"
+	// UploadTypeMultipart lets you send metadata + all the content in a single request
+	UploadTypeMultipart UploadType = "multipart"
+	// UploadTypeResumable lets you send blocks of N*128KB at a time. The upload session is
+	// started from the API server, so the ingest point will be anchored wherever the API server is.
+	UploadTypeResumable = "resumable"
+	// UploadTypeDeferredResumable also lets you send blocks of N*128KB at a time, but it
+	// lets you start the upload session from the client, which means you might get a closer ingest point.
+	UploadTypeDeferredResumable = "deferred_resumable"
 )
 
+// BuildState describes the state of a build, relative to its initial upload, and
+// its processing.
 type BuildState string
 
 const (
-	BuildState_STARTED    BuildState = "started"
-	BuildState_PROCESSING            = "processing"
-	BuildState_COMPLETED             = "completed"
-	BuildState_FAILED                = "failed"
+	// BuildStateStarted is the state of a build from its creation until the initial upload is complete
+	BuildStateStarted BuildState = "started"
+	// BuildStateProcessing is the state of a build from the initial upload's completion to its fully-processed state.
+	// This state does not mean the build is actually being processed right now, it's just queued for processing.
+	BuildStateProcessing = "processing"
+	// BuildStateCompleted means the build was successfully processed. Its patch hasn't necessarily been
+	// rediff'd yet, but we have the holy (patch,signature,archive) trinity.
+	BuildStateCompleted = "completed"
+	// BuildStateFailed means something went wrong with the build. A failing build will not update the channel
+	// head and can be requeued by the itch.io team, although if a new build is pushed before they do,
+	// that new build will "win".
+	BuildStateFailed = "failed"
 )
 
+// BuildFileState describes the state of a specific file for a build
 type BuildFileState string
 
 const (
-	BuildFileState_CREATED   BuildFileState = "created"
-	BuildFileState_UPLOADING                = "uploading"
-	BuildFileState_UPLOADED                 = "uploaded"
-	BuildFileState_FAILED                   = "failed"
+	// BuildFileStateCreated means the file entry exists on itch.io
+	BuildFileStateCreated BuildFileState = "created"
+	// BuildFileStateUploading means the file is currently being uploaded to storage
+	BuildFileStateUploading = "uploading"
+	// BuildFileStateUploaded means the file is ready
+	BuildFileStateUploaded = "uploaded"
+	// BuildFileStateFailed means the file failed uploading
+	BuildFileStateFailed = "failed"
 )
 
-type ListBuildFilesResponse struct {
-	Response
-
-	Files []*BuildFileInfo
-}
-
+// ListBuildFiles returns a list of files associated to a build
 func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files", buildID)
 
@@ -282,18 +293,8 @@ func (c *Client) ListBuildFiles(buildID int64) (r ListBuildFilesResponse, err er
 	return
 }
 
-type NewBuildFileResponse struct {
-	Response
-
-	File struct {
-		ID            int64
-		UploadURL     string            `json:"upload_url"`
-		UploadParams  map[string]string `json:"upload_params"`
-		UploadHeaders map[string]string `json:"upload_headers"`
-	}
-}
-
-func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, subType BuildFileSubType, uploadType UploadType) (r NewBuildFileResponse, err error) {
+// CreateBuildFile creates a new build file for a build
+func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, subType BuildFileSubType, uploadType UploadType) (r CreateBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files", buildID)
 
 	form := url.Values{}
@@ -314,7 +315,8 @@ func (c *Client) CreateBuildFile(buildID int64, fileType BuildFileType, subType 
 	return
 }
 
-func (c *Client) CreateBuildFileWithName(buildID int64, fileType BuildFileType, subType BuildFileSubType, uploadType UploadType, name string) (r NewBuildFileResponse, err error) {
+// CreateBuildFileWithName creates a new build file for a build, with a specific name
+func (c *Client) CreateBuildFileWithName(buildID int64, fileType BuildFileType, subType BuildFileSubType, uploadType UploadType, name string) (r CreateBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files", buildID)
 
 	form := url.Values{}
@@ -338,10 +340,7 @@ func (c *Client) CreateBuildFileWithName(buildID int64, fileType BuildFileType, 
 	return
 }
 
-type FinalizeBuildFileResponse struct {
-	Response
-}
-
+// FinalizeBuildFile marks the end of the upload for a build file, it validates
 func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r FinalizeBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d", buildID, fileID)
 
@@ -357,6 +356,8 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 	return
 }
 
+// DownloadBuildFileResponse is what the API responds with when we
+// ask to download an upload
 type DownloadBuildFileResponse struct {
 	Response
 
@@ -364,13 +365,16 @@ type DownloadBuildFileResponse struct {
 }
 
 var (
-	BuildFileNotFound = errors.New("build file not found in storage")
+	// ErrBuildFileNotFound is returned when someone is asking for a non-existent file
+	ErrBuildFileNotFound = errors.New("build file not found in storage")
 )
 
+// GetBuildFileDownloadURL returns a download URL for a given build file
 func (c *Client) GetBuildFileDownloadURL(buildID int64, fileID int64) (r DownloadBuildFileResponse, err error) {
 	return c.GetBuildFileDownloadURLWithValues(buildID, fileID, nil)
 }
 
+// GetBuildFileDownloadURLWithValues returns a download URL for a given build file, with additional query parameters
 func (c *Client) GetBuildFileDownloadURLWithValues(buildID int64, fileID int64, values url.Values) (r DownloadBuildFileResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
 	if values != nil {
@@ -390,6 +394,8 @@ func (c *Client) GetBuildFileDownloadURLWithValues(buildID int64, fileID int64, 
 	return
 }
 
+// DownloadBuildFile returns an io.ReadCloser to download a build file, as
+// opposed to GetBuildFileDownloadURL
 func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadCloser, err error) {
 	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
 
@@ -423,34 +429,25 @@ func (c *Client) DownloadBuildFile(buildID int64, fileID int64) (reader io.ReadC
 	dlResp.Body.Close()
 
 	if dlResp.StatusCode == 404 {
-		err = BuildFileNotFound
+		err = ErrBuildFileNotFound
 	} else {
 		err = fmt.Errorf("Can't download: %s", dlResp.Status)
 	}
 	return
 }
 
-type DownloadUploadBuildResponseItem struct {
-	URL string
-}
-
-type DownloadUploadBuildResponse struct {
-	Response
-
-	Patch     *DownloadUploadBuildResponseItem
-	Signature *DownloadUploadBuildResponseItem
-	Manifest  *DownloadUploadBuildResponseItem
-	Archive   *DownloadUploadBuildResponseItem
-}
-
+// DownloadUploadBuild returns download info for all types of files for a build
 func (c *Client) DownloadUploadBuild(uploadID int64, buildID int64) (r DownloadUploadBuildResponse, err error) {
 	return c.DownloadUploadBuildWithKey("", uploadID, buildID)
 }
 
+// DownloadUploadBuildWithKey returns download info for all types of files for a build, when using with a download key
 func (c *Client) DownloadUploadBuildWithKey(downloadKey string, uploadID int64, buildID int64) (r DownloadUploadBuildResponse, err error) {
-	return c.DownloadUploadBuildWithKeyAndValues("", uploadID, buildID, nil)
+	return c.DownloadUploadBuildWithKeyAndValues(downloadKey, uploadID, buildID, nil)
 }
 
+// DownloadUploadBuildWithKeyAndValues returns download info for all types of files for a build.
+// downloadKey can be empty
 func (c *Client) DownloadUploadBuildWithKeyAndValues(downloadKey string, uploadID int64, buildID int64, values url.Values) (r DownloadUploadBuildResponse, err error) {
 	if values == nil {
 		values = url.Values{}
@@ -482,20 +479,15 @@ func (c *Client) DownloadUploadBuildWithKeyAndValues(downloadKey string, uploadI
 type BuildEventType string
 
 const (
-	// BuildEvent_LOG is for build events of type log message
-	BuildEvent_LOG BuildEventType = "log"
+	// BuildEventLog is for build events of type log message
+	BuildEventLog BuildEventType = "log"
 )
 
 // BuildEventData is a JSON object associated with a build event
 type BuildEventData map[string]interface{}
 
-// NewBuildEventResponse is what the API responds with when you create a new build event
-type NewBuildEventResponse struct {
-	Response
-}
-
 // CreateBuildEvent associates a new build event to a build
-func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, message string, data BuildEventData) (r NewBuildEventResponse, err error) {
+func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, message string, data BuildEventData) (r CreateBuildEventResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/events", buildID)
 
 	form := url.Values{}
@@ -515,11 +507,6 @@ func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, messa
 
 	err = ParseAPIResponse(&r, resp)
 	return
-}
-
-// CreateBuildFailureResponse is what the API responds with when we mark a build as failed
-type CreateBuildFailureResponse struct {
-	Response
 }
 
 // CreateBuildFailure marks a given build as failed. We get to specify an error message and
@@ -558,20 +545,6 @@ func (c *Client) CreateRediffBuildFailure(buildID int64, message string) (r Crea
 	return
 }
 
-// A BuildEvent describes something that happened while we were processing a build.
-type BuildEvent struct {
-	Type    BuildEventType
-	Message string
-	Data    BuildEventData
-}
-
-// ListBuildEventsResponse is what the API responds with when we ask for the list of events for a build
-type ListBuildEventsResponse struct {
-	Response
-
-	Events []BuildEvent
-}
-
 // ListBuildEvents returns a series of events associated with a given build
 func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/events", buildID)
@@ -583,137 +556,4 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 
 	err = ParseAPIResponse(&r, resp)
 	return
-}
-
-// Helpers
-
-// Get performs an HTTP GET request to the API
-func (c *Client) Get(url string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	return c.Do(req)
-}
-
-// PostForm performs an HTTP POST request to the API, with url-encoded parameters
-func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
-	req, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return c.Do(req)
-}
-
-// Do performs a request (any method). It takes care of JWT or API key
-// authentication, sets the propre user agent, has built-in retry,
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(c.Key, "jwt:") {
-		req.Header.Add("Authorization", strings.Split(c.Key, ":")[1])
-	}
-	req.Header.Set("User-Agent", c.UserAgent)
-
-	var res *http.Response
-	var err error
-
-	retryPatterns := append(c.RetryPatterns, time.Millisecond)
-
-	for _, sleepTime := range retryPatterns {
-		res, err = c.HTTPClient.Do(req)
-		if err != nil {
-			if strings.Contains(err.Error(), "TLS handshake timeout") {
-				time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
-				continue
-			}
-			return nil, err
-		}
-
-		if res.StatusCode == 503 {
-			// Rate limited, try again according to patterns.
-			// following https://cloud.google.com/storage/docs/json_api/v1/how-tos/upload#exp-backoff to the letter
-			res.Body.Close()
-			time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
-			continue
-		}
-
-		break
-	}
-
-	return res, err
-}
-
-// MakePath crafts an API url from our configured base URL
-func (c *Client) MakePath(format string, a ...interface{}) string {
-	base := strings.Trim(c.BaseURL, "/")
-	subPath := strings.Trim(fmt.Sprintf(format, a...), "/")
-
-	var key string
-	if strings.HasPrefix(c.Key, "jwt:") {
-		key = "jwt"
-	} else {
-		key = c.Key
-	}
-	return fmt.Sprintf("%s/%s/%s", base, key, subPath)
-}
-
-// ParseAPIResponse unmarshals an HTTP response into one of out response
-// data structures
-func ParseAPIResponse(dst interface{}, res *http.Response) error {
-	if res == nil || res.Body == nil {
-		return fmt.Errorf("No response from server")
-	}
-
-	bodyReader := res.Body
-	defer bodyReader.Close()
-
-	if res.StatusCode/100 != 2 {
-		return fmt.Errorf("Server returned %s for %s", res.Status, res.Request.URL.String())
-	}
-
-	body, err := ioutil.ReadAll(bodyReader)
-	if err != nil {
-		return errors.Wrap(err, 1)
-	}
-
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(dst)
-	if err != nil {
-		msg := fmt.Sprintf("JSON decode error: %s\n\nBody: %s\n\n", err.Error(), string(body))
-		return errors.Wrap(errors.New(msg), 1)
-	}
-
-	errs := reflect.Indirect(reflect.ValueOf(dst)).FieldByName("Errors")
-	if errs.Len() > 0 {
-		// TODO: handle other errors too
-		return fmt.Errorf("itch.io API error: %s", errs.Index(0).String())
-	}
-
-	return nil
-}
-
-// FindBuildFile looks for an uploaded file of the right type
-// in a list of file. Returns nil if it can't find one.
-func FindBuildFile(fileType BuildFileType, files []*BuildFileInfo) *BuildFileInfo {
-	for _, f := range files {
-		if f.Type == fileType && f.State == BuildFileState_UPLOADED {
-			return f
-		}
-	}
-
-	return nil
-}
-
-// ItchfsURL returns the itchfs:/// url usable to download a given file
-// from a given build
-func (build BuildInfo) ItchfsURL(file *BuildFileInfo, apiKey string) string {
-	return ItchfsURL(build.ID, file.ID, apiKey)
-}
-
-// ItchfsURL returns the itchfs:/// url usable to download a given file
-// from a given build
-func ItchfsURL(buildID int64, fileID int64, apiKey string) string {
-	values := url.Values{}
-	values.Set("api_key", apiKey)
-	return fmt.Sprintf("itchfs:///wharf/builds/%d/files/%d/download?%s",
-		buildID, fileID, values.Encode())
 }

@@ -86,3 +86,10 @@ type ChannelInfo struct {
 	Head    *BuildInfo `json:"head"`
 	Pending *BuildInfo `json:"pending"`
 }
+
+// A BuildEvent describes something that happened while we were processing a build.
+type BuildEvent struct {
+	Type    BuildEventType `json:"type"`
+	Message string         `json:"message"`
+	Data    BuildEventData `json:"data"`
+}
