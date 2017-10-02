@@ -17,6 +17,7 @@ import (
 	"github.com/go-errors/errors"
 )
 
+// A Client allows consuming the itch.io API
 type Client struct {
 	Key           string
 	HTTPClient    *http.Client
@@ -35,6 +36,7 @@ func defaultRetryPatterns() []time.Duration {
 	}
 }
 
+// ClientWithKey creates a new itch.io API client with a given API key
 func ClientWithKey(key string) *Client {
 	c := &Client{
 		Key:           key,
@@ -46,46 +48,15 @@ func ClientWithKey(key string) *Client {
 	return c
 }
 
+// SetServer allows changing the server to which we're making API
+// requests (which defaults to the reference itch.io server)
 func (c *Client) SetServer(itchioServer string) *Client {
 	c.BaseURL = fmt.Sprintf("%s/api/1", itchioServer)
 	return c
 }
 
-type Response struct {
-	Errors []string
-}
-
-type User struct {
-	ID       int64
-	Username string
-	CoverUrl string `json:"cover_url"`
-}
-
-type Game struct {
-	ID  int64
-	Url string
-}
-
-type Upload struct {
-	ID          int64
-	Filename    string
-	Size        int64
-	ChannelName string `json:"channel_name"`
-	Build       *BuildInfo
-
-	OSX     bool `json:"p_osx"`
-	Linux   bool `json:"p_linux"`
-	Windows bool `json:"p_windows"`
-	Android bool `json:"p_android"`
-}
-
-type StatusResponse struct {
-	Response
-
-	Success bool
-}
-
-func (c *Client) WharfStatus() (r StatusResponse, err error) {
+// WharfStatus requests the status of the wharf infrastructure
+func (c *Client) WharfStatus() (r WharfStatusResponse, err error) {
 	path := c.MakePath("wharf/status")
 
 	resp, err := c.Get(path)
@@ -97,13 +68,8 @@ func (c *Client) WharfStatus() (r StatusResponse, err error) {
 	return
 }
 
-type MyGamesResponse struct {
-	Response
-
-	Games []Game
-}
-
-func (c *Client) MyGames() (r MyGamesResponse, err error) {
+// ListMyGames lists the games one develops (ie. can edit)
+func (c *Client) ListMyGames() (r ListMyGamesResponse, err error) {
 	path := c.MakePath("my-games")
 	log.Printf("Requesting %s\n", path)
 
@@ -116,12 +82,14 @@ func (c *Client) MyGames() (r MyGamesResponse, err error) {
 	return
 }
 
+// GameUploadsResponse is what the server replies with when asked for a game's uploads
 type GameUploadsResponse struct {
 	Response
 
 	Uploads []*Upload `json:"uploads"`
 }
 
+// GameUploads lists the uploads for a game that we have access to with our API key
 func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 	path := c.MakePath("game/%d/uploads", gameID)
 
@@ -134,20 +102,24 @@ func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 	return
 }
 
+// UploadDownloadResponse is what the API replies to when we ask to download an upload
 type UploadDownloadResponse struct {
 	Response
 
 	URL string
 }
 
+// UploadDownload attempts to download an upload without a download key
 func (c *Client) UploadDownload(uploadID int64) (r UploadDownloadResponse, err error) {
 	return c.UploadDownloadWithKey("", uploadID)
 }
 
+// UploadDownloadWithKey attempts to download an upload with a download key
 func (c *Client) UploadDownloadWithKey(downloadKey string, uploadID int64) (r UploadDownloadResponse, err error) {
 	return c.UploadDownloadWithKeyAndValues(downloadKey, uploadID, nil)
 }
 
+// UploadDownloadWithKeyAndValues attempts to download an upload with a download key and additional parameters
 func (c *Client) UploadDownloadWithKeyAndValues(downloadKey string, uploadID int64, values url.Values) (r UploadDownloadResponse, err error) {
 	if values == nil {
 		values = url.Values{}
@@ -171,6 +143,7 @@ func (c *Client) UploadDownloadWithKeyAndValues(downloadKey string, uploadID int
 	return r, err
 }
 
+// NewBuildResponse is what the API replies with when we create a new build
 type NewBuildResponse struct {
 	Response
 
@@ -183,6 +156,8 @@ type NewBuildResponse struct {
 	}
 }
 
+// CreateBuild creates a new build for a given user/game:channel, with
+// an optional user version
 func (c *Client) CreateBuild(target string, channel string, userVersion string) (r NewBuildResponse, err error) {
 	path := c.MakePath("wharf/builds")
 
@@ -202,47 +177,15 @@ func (c *Client) CreateBuild(target string, channel string, userVersion string) 
 	return
 }
 
-type BuildFileInfo struct {
-	ID      int64
-	Size    int64
-	State   BuildFileState
-	Type    BuildFileType    `json:"type"`
-	SubType BuildFileSubType `json:"sub_type"`
-
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type BuildInfo struct {
-	ID            int64
-	ParentBuildID int64 `json:"parent_build_id"`
-	State         BuildState
-
-	Version     int64
-	UserVersion string `json:"user_version"`
-
-	Files []*BuildFileInfo
-
-	User      User
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type ChannelInfo struct {
-	Name string
-	Tags string
-
-	Upload  Upload
-	Head    *BuildInfo `json:"head"`
-	Pending *BuildInfo `json:"pending"`
-}
-
+// ListChannelsResponse is what the API responds with when we ask for all the
+// channels of a particular game
 type ListChannelsResponse struct {
 	Response
 
 	Channels map[string]ChannelInfo
 }
 
+// GetChannelResponse
 type GetChannelResponse struct {
 	Response
 
@@ -535,18 +478,23 @@ func (c *Client) DownloadUploadBuildWithKeyAndValues(downloadKey string, uploadI
 	return
 }
 
+// BuildEventType specifies what kind of event a build event is - could be a log message, etc.
 type BuildEventType string
 
 const (
+	// BuildEvent_LOG is for build events of type log message
 	BuildEvent_LOG BuildEventType = "log"
 )
 
+// BuildEventData is a JSON object associated with a build event
 type BuildEventData map[string]interface{}
 
+// NewBuildEventResponse is what the API responds with when you create a new build event
 type NewBuildEventResponse struct {
 	Response
 }
 
+// CreateBuildEvent associates a new build event to a build
 func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, message string, data BuildEventData) (r NewBuildEventResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/events", buildID)
 
@@ -569,10 +517,13 @@ func (c *Client) CreateBuildEvent(buildID int64, eventType BuildEventType, messa
 	return
 }
 
+// CreateBuildFailureResponse is what the API responds with when we mark a build as failed
 type CreateBuildFailureResponse struct {
 	Response
 }
 
+// CreateBuildFailure marks a given build as failed. We get to specify an error message and
+// if it's a fatal error (if not, the build can be retried after a bit)
 func (c *Client) CreateBuildFailure(buildID int64, message string, fatal bool) (r CreateBuildFailureResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/failures", buildID)
 
@@ -591,6 +542,7 @@ func (c *Client) CreateBuildFailure(buildID int64, message string, fatal bool) (
 	return
 }
 
+// CreateRediffBuildFailure marks a given build as having failed to rediff (optimize)
 func (c *Client) CreateRediffBuildFailure(buildID int64, message string) (r CreateBuildFailureResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/failures/rediff", buildID)
 
@@ -606,18 +558,21 @@ func (c *Client) CreateRediffBuildFailure(buildID int64, message string) (r Crea
 	return
 }
 
+// A BuildEvent describes something that happened while we were processing a build.
 type BuildEvent struct {
 	Type    BuildEventType
 	Message string
 	Data    BuildEventData
 }
 
+// ListBuildEventsResponse is what the API responds with when we ask for the list of events for a build
 type ListBuildEventsResponse struct {
 	Response
 
 	Events []BuildEvent
 }
 
+// ListBuildEvents returns a series of events associated with a given build
 func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err error) {
 	path := c.MakePath("wharf/builds/%d/events", buildID)
 
@@ -632,6 +587,7 @@ func (c *Client) ListBuildEvents(buildID int64) (r ListBuildEventsResponse, err 
 
 // Helpers
 
+// Get performs an HTTP GET request to the API
 func (c *Client) Get(url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -640,6 +596,7 @@ func (c *Client) Get(url string) (*http.Response, error) {
 	return c.Do(req)
 }
 
+// PostForm performs an HTTP POST request to the API, with url-encoded parameters
 func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
 	req, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -649,6 +606,8 @@ func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
 	return c.Do(req)
 }
 
+// Do performs a request (any method). It takes care of JWT or API key
+// authentication, sets the propre user agent, has built-in retry,
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(c.Key, "jwt:") {
 		req.Header.Add("Authorization", strings.Split(c.Key, ":")[1])
@@ -684,6 +643,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return res, err
 }
 
+// MakePath crafts an API url from our configured base URL
 func (c *Client) MakePath(format string, a ...interface{}) string {
 	base := strings.Trim(c.BaseURL, "/")
 	subPath := strings.Trim(fmt.Sprintf(format, a...), "/")
@@ -697,6 +657,8 @@ func (c *Client) MakePath(format string, a ...interface{}) string {
 	return fmt.Sprintf("%s/%s/%s", base, key, subPath)
 }
 
+// ParseAPIResponse unmarshals an HTTP response into one of out response
+// data structures
 func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	if res == nil || res.Body == nil {
 		return fmt.Errorf("No response from server")

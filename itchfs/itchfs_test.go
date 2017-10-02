@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/alecthomas/assert"
 	"github.com/itchio/httpkit/httpfile"
 	"github.com/itchio/wharf/eos"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Register(t *testing.T) {

@@ -37,21 +37,22 @@ func testTools(code int, body string) (*httptest.Server, *Client) {
 	return server, client
 }
 
-func Test_MyGames(t *testing.T) {
+func Test_ListMyGames(t *testing.T) {
 	server, client := testTools(200, `{
 		"games": [
-			{"url": "https://kenney.itch.io/barb", "id": 123},
-		  {"url": "https://leafo.itch.io/x-moon", "id": 456}
+			{"url": "https://kenney.itch.io/barb", "id": 123, "min_price": 5000},
+		  {"url": "https://leafo.itch.io/x-moon", "id": 456, "min_price": 12000}
 		]
 	}`)
 	defer server.Close()
 
-	games, err := client.MyGames()
+	games, err := client.ListMyGames()
 	assert.Nil(t, err)
-	assert.Equal(t, len(games.Errors), 0)
-	assert.Equal(t, len(games.Games), 2)
-	assert.Equal(t, games.Games[0].ID, int64(123))
-	assert.Equal(t, games.Games[0].Url, "https://kenney.itch.io/barb")
+	assert.EqualValues(t, len(games.Errors), 0)
+	assert.EqualValues(t, len(games.Games), 2)
+	assert.EqualValues(t, games.Games[0].ID, 123)
+	assert.EqualValues(t, games.Games[0].URL, "https://kenney.itch.io/barb")
+	assert.EqualValues(t, games.Games[0].MinPrice, 5000)
 }
 
 func Test_ParseSpec(t *testing.T) {
