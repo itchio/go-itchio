@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -123,8 +122,6 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	}
 
 	intermediate = camelifyMap(intermediate)
-
-	log.Printf("Decoding intermediate %#v\n", intermediate)
 
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		TagName: "json",

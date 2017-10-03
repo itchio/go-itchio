@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -66,7 +65,6 @@ func (c *Client) WharfStatus() (r WharfStatusResponse, err error) {
 // ListMyGames lists the games one develops (ie. can edit)
 func (c *Client) ListMyGames() (r ListMyGamesResponse, err error) {
 	path := c.MakePath("my-games")
-	log.Printf("Requesting %s\n", path)
 
 	resp, err := c.Get(path)
 	if err != nil {
