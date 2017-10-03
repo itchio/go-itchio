@@ -38,14 +38,18 @@ type Game struct {
 type Upload struct {
 	ID          int64  `json:"id"`
 	Filename    string `json:"filename"`
+	DisplayName string `json:"displayName"`
 	Size        int64  `json:"size"`
 	ChannelName string `json:"channelName"`
 	Build       *Build `json:"build"`
+	Demo        bool   `json:"demo"`
+	Preorder    bool   `json:"preorder"`
 
-	OSX     bool `json:"pOsx"`
-	Linux   bool `json:"pLinux"`
-	Windows bool `json:"pWindows"`
-	Android bool `json:"pAndroid"`
+	Type    string `json:"type"`
+	OSX     bool   `json:"pOsx"`
+	Linux   bool   `json:"pLinux"`
+	Windows bool   `json:"pWindows"`
+	Android bool   `json:"pAndroid"`
 }
 
 // BuildFile contains information about a build's "file", which could be its
