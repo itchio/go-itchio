@@ -28,6 +28,8 @@ type Game struct {
 	InPressSystem bool  `json:"inPressSystem"`
 	HasDemo       bool  `json:"hasDemo"`
 
+	Classification string `json:"classification"`
+
 	OSX     bool `json:"pOsx"`
 	Linux   bool `json:"pLinux"`
 	Windows bool `json:"pWindows"`
