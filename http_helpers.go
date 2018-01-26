@@ -160,7 +160,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 				}
 			}
 			if len(messages) > 0 {
-				return fmt.Errorf("itch.io API error: %s", strings.Join(messages, ","))
+				return &APIError{Messages: messages}
 			}
 		}
 	}

@@ -64,6 +64,7 @@ func Test_ListMyGamesError(t *testing.T) {
 
 	_, err := client.ListMyGames()
 	assert.Error(t, err)
+	assert.True(t, IsAPIError(err))
 	assert.EqualValues(t, "itch.io API error: invalid game", err.Error())
 }
 
