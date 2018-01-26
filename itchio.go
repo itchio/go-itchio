@@ -94,13 +94,6 @@ func (c *Client) ListMyGames() (r ListMyGamesResponse, err error) {
 	return
 }
 
-// GameUploadsResponse is what the server replies with when asked for a game's uploads
-type GameUploadsResponse struct {
-	Response
-
-	Uploads []*Upload `json:"uploads"`
-}
-
 // GameUploads lists the uploads for a game that we have access to with our API key
 func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 	path := c.MakePath("game/%d/uploads", gameID)
@@ -112,13 +105,6 @@ func (c *Client) GameUploads(gameID int64) (r GameUploadsResponse, err error) {
 
 	err = ParseAPIResponse(&r, resp)
 	return
-}
-
-// UploadDownloadResponse is what the API replies to when we ask to download an upload
-type UploadDownloadResponse struct {
-	Response
-
-	URL string
 }
 
 // UploadDownload attempts to download an upload without a download key
@@ -153,19 +139,6 @@ func (c *Client) UploadDownloadWithKeyAndValues(downloadKey string, uploadID int
 
 	err = ParseAPIResponse(&r, resp)
 	return r, err
-}
-
-// NewBuildResponse is what the API replies with when we create a new build
-type NewBuildResponse struct {
-	Response
-
-	Build struct {
-		ID          int64 `json:"id"`
-		UploadID    int64 `json:"uploadId"`
-		ParentBuild struct {
-			ID int64 `json:"id"`
-		} `json:"parentBuild"`
-	}
 }
 
 // CreateBuild creates a new build for a given user/game:channel, with
@@ -371,14 +344,6 @@ func (c *Client) FinalizeBuildFile(buildID int64, fileID int64, size int64) (r F
 
 	err = ParseAPIResponse(&r, resp)
 	return
-}
-
-// DownloadBuildFileResponse is what the API responds with when we
-// ask to download an upload
-type DownloadBuildFileResponse struct {
-	Response
-
-	URL string
 }
 
 var (
