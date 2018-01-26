@@ -131,3 +131,7 @@ type UpgradePathItem struct {
 	UpdatedAt   string `json:"updatedAt"`
 	PatchSize   int64  `json:"patchSize"`
 }
+
+type NewDownloadSessionResponse struct {
+	UUID string `json:"uuid"`
+}

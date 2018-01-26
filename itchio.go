@@ -616,7 +616,7 @@ type FindUpgradeParams struct {
 	DownloadKeyID  int64
 }
 
-// FindUpgrade
+// FindUpgrade looks for a series of patch to upgrade from a given version to the latest version
 func (c *Client) FindUpgrade(params *FindUpgradeParams) (FindUpgradeResponse, error) {
 	var r FindUpgradeResponse
 
@@ -646,5 +646,33 @@ func (c *Client) FindUpgrade(params *FindUpgradeParams) (FindUpgradeResponse, er
 	if err != nil {
 		return r, errors.Wrap(err, 0)
 	}
+	return r, nil
+}
+
+type NewDownloadSessionParams struct {
+	GameID        int64
+	DownloadKeyID int64
+}
+
+func (c *Client) NewDownloadSession(params *NewDownloadSessionParams) (NewDownloadSessionResponse, error) {
+	var r NewDownloadSessionResponse
+
+	path := c.MakePath("/game/%d/download", params.GameID)
+
+	form := url.Values{}
+	if params.DownloadKeyID != 0 {
+		form.Add("download_key_id", fmt.Sprintf("%d", params.DownloadKeyID))
+	}
+
+	resp, err := c.PostForm(path, form)
+	if err != nil {
+		return r, errors.Wrap(err, 0)
+	}
+
+	err = ParseAPIResponse(&r, resp)
+	if err != nil {
+		return r, errors.Wrap(err, 0)
+	}
+
 	return r, nil
 }
