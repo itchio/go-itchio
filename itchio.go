@@ -598,7 +598,29 @@ func (c *Client) NewDownloadSession(params *NewDownloadSessionParams) (*NewDownl
 
 	err := c.PostFormResponse(path, form, r)
 	if err != nil {
-		return r, errors.Wrap(err, 0)
+		return nil, errors.Wrap(err, 0)
+	}
+
+	return r, nil
+}
+
+type GetCollectionGamesParams struct {
+	CollectionID int64
+	Page         int64
+}
+
+func (c *Client) GetCollectionGames(params *GetCollectionGamesParams) (*GetCollectionGamesResponse, error) {
+	r := &GetCollectionGamesResponse{}
+
+	form := url.Values{}
+	if params.Page != 0 {
+		form.Add("page", fmt.Sprintf("%d", params.Page))
+	}
+	path := c.MakePath("/collection/%d/games?%s", params.CollectionID, form.Encode())
+
+	err := c.GetResponse(path, r)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return r, nil
