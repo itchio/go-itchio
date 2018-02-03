@@ -604,21 +604,20 @@ func (c *Client) NewDownloadSession(params *NewDownloadSessionParams) (*NewDownl
 	return r, nil
 }
 
-type GetCollectionGamesParams struct {
-	CollectionID int64
-	Page         int64
+type SubkeyParams struct {
+	GameID int64
+	Scope  string
 }
 
-func (c *Client) GetCollectionGames(params *GetCollectionGamesParams) (*GetCollectionGamesResponse, error) {
-	r := &GetCollectionGamesResponse{}
+func (c *Client) Subkey(params *SubkeyParams) (*SubkeyResponse, error) {
+	r := &SubkeyResponse{}
+	path := c.MakePath("/credentials/subkey")
 
 	form := url.Values{}
-	if params.Page != 0 {
-		form.Add("page", fmt.Sprintf("%d", params.Page))
-	}
-	path := c.MakePath("/collection/%d/games?%s", params.CollectionID, form.Encode())
+	form.Add("game_id", fmt.Sprintf("%d", params.GameID))
+	form.Add("scope", params.Scope)
 
-	err := c.GetResponse(path, r)
+	err := c.PostFormResponse(path, form, r)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}

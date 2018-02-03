@@ -131,8 +131,7 @@ type NewDownloadSessionResponse struct {
 	UUID string `json:"uuid"`
 }
 
-type GetCollectionGamesResponse struct {
-	Page    int64   `json:"page"`
-	PerPage int64   `json:"perPage"`
-	Games   []*Game `json:"games"`
+type SubkeyResponse struct {
+	Key       string `json:"key"`
+	ExpiresAt string `json:"expiresAt"`
 }
