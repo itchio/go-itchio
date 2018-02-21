@@ -9,8 +9,15 @@ import (
 
 // User represents an itch.io account, with basic profile info
 type User struct {
-	ID            int64  `json:"id"`
-	Username      string `json:"username"`
+	ID int64 `json:"id"`
+
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+
+	Developer bool `json:"developer"`
+	PressUser bool `json:"pressUser"`
+
+	URL           string `json:"url"`
 	CoverURL      string `json:"coverUrl"`
 	StillCoverURL string `json:"stillCoverUrl"`
 }
@@ -62,6 +69,17 @@ type Upload struct {
 
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
+}
+
+type Collection struct {
+	ID int64 `json:"id"`
+
+	Title string `json:"title"`
+
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+
+	GamesCount int64 `json:"gamesCount"`
 }
 
 // BuildFile contains information about a build's "file", which could be its
