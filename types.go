@@ -82,6 +82,18 @@ type Collection struct {
 	GamesCount int64 `json:"gamesCount"`
 }
 
+type DownloadKey struct {
+	ID int64 `json:"id"`
+
+	GameID int64 `json:"gameId"`
+	Game   *Game `json:"game,omitempty" gorm:"-"`
+
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+
+	OwnerID int64 `json:"ownerId"`
+}
+
 // BuildFile contains information about a build's "file", which could be its
 // archive, its signature, its patch, etc.
 type BuildFile struct {
