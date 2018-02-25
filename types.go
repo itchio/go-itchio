@@ -36,9 +36,13 @@ type Game struct {
 	// Human-friendly short description
 	ShortText string `json:"shortText"`
 	// Downloadable game, html game, etc.
-	Type string `json:"type"`
+	Type GameType `json:"type"`
 	// Classification: game, tool, comic, etc.
-	Classification string `json:"classification"`
+	Classification GameClassification `json:"classification"`
+
+	// Configuration for embedded (HTML5) games
+	// @optional
+	Embed *GameEmbedInfo `json:"embed"`
 
 	// Cover url (might be a GIF)
 	CoverURL string `json:"coverUrl"`
@@ -73,6 +77,59 @@ type Game struct {
 	// The best current sale for this game
 	// @optional
 	Sale *Sale `json:"sale" gorm:"-"`
+}
+
+// Type of an itch.io game page, mostly related to
+// how it should be presented on web (downloadable or embed)
+type GameType = string
+
+const (
+	// downloadable
+	GameTypeDefault GameType = "default"
+	// .swf (legacy)
+	GameTypeFlash GameType = "flash"
+	// .unity3d (legacy)
+	GameTypeUnity GameType = "unity"
+	// .jar (legacy)
+	GameTypeJava GameType = "java"
+	// .html (thriving)
+	GameTypeHTML GameType = "html"
+)
+
+// Creator-picked classification for a page
+type GameClassification = string
+
+const (
+	// something you can play
+	GameClassificationGame GameClassification = "game"
+	// all software pretty much
+	GameClassificationTool GameClassification = "tool"
+	// assets: graphics, sounds, etc.
+	GameClassificationAssets GameClassification = "assets"
+	// game mod (no link to game, purely creator tagging)
+	GameClassificationGameMod GameClassification = "game_mod"
+	// printable / board / card game
+	GameClassificationPhysicalGame GameClassification = "physical_game"
+	// bunch of music files
+	GameClassificationSoundtrack GameClassification = "soundtrack"
+	// anything that creators think don't fit in any other category
+	GameClassificationOther GameClassification = "other"
+	// comic book (pdf, jpg, specific comic formats, etc.)
+	GameClassificationComic GameClassification = "comic"
+	// book (pdf, jpg, specific e-book formats, etc.)
+	GameClassificationBook GameClassification = "book"
+)
+
+// Presentation information for embed games
+type GameEmbedInfo struct {
+	// width of the initial viewport, in pixels
+	Width int64 `json:"width"`
+
+	// height of the initial viewport, in pixels
+	Height int64 `json:"height"`
+
+	// for itch.io website, whether or not a fullscreen button should be shown
+	Fullscreen bool `json:"fullscreen"`
 }
 
 // Describes a discount for a game.
