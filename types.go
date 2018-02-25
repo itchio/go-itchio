@@ -56,6 +56,8 @@ type Game struct {
 
 	// Price in cents of a dollar
 	MinPrice int64 `json:"minPrice"`
+	// Can this game be bought?
+	CanBeBought bool `json:"canBeBought"`
 	// Is this game downloadable by press users for free?
 	InPressSystem bool `json:"inPressSystem"`
 	// Does this game have a demo that can be downloaded for free?
@@ -73,6 +75,9 @@ type Game struct {
 	// The user account this game is associated to
 	// @optional
 	User *User `json:"user" gorm:"-"`
+
+	// ID of the user account this game is associated to
+	UserID int64 `json:"userId"`
 
 	// The best current sale for this game
 	// @optional
