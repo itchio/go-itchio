@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/itchio/httpkit/httpfile"
+	"github.com/itchio/httpkit/htfs"
 	"github.com/itchio/wharf/eos"
 	"github.com/stretchr/testify/assert"
 )
@@ -119,7 +119,7 @@ func Test_Resource(t *testing.T) {
 	testFailGetter("itchfs:///upload/13/download/builds/57/butt?api_key=x")
 
 	testPair := func(itchfsURL string, downloadURL string) {
-		var getURL httpfile.GetURLFunc
+		var getURL htfs.GetURLFunc
 		var url string
 		var err error
 
