@@ -138,6 +138,7 @@ type MakeUploadDownloadParams struct {
 
 func (c *Client) MakeUploadDownloadURL(p *MakeUploadDownloadParams) string {
 	q := NewQuery(c, "uploads/%d/download", p.UploadID)
+	q.AddAPICredentials()
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
 	return q.URL()
@@ -166,6 +167,7 @@ func (c *Client) MakeBuildDownloadURL(p *MakeBuildDownloadParams) string {
 	}
 
 	q := NewQuery(c, "builds/%d/download/%s/%s", p.BuildID, p.Type, subType)
+	q.AddAPICredentials()
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
 	return q.URL()
