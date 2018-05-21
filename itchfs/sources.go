@@ -91,19 +91,6 @@ func (s *source) makeGetURL() (htfs.GetURLFunc, error) {
 	}
 }
 
-func stripDownloadKey(in url.Values) url.Values {
-	res := url.Values{}
-	for k, vv := range in {
-		if k == "download_key_id" {
-			continue
-		}
-		for _, v := range vv {
-			res.Add(k, v)
-		}
-	}
-	return res
-}
-
 func (s *source) makeDownloadBuildURL(tokens []string) (htfs.GetURLFunc, error) {
 	buildID, _ := strconv.ParseInt(tokens[5], 10, 64)
 	fileType := tokens[6]
