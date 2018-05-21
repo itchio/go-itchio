@@ -73,7 +73,7 @@ type Game struct {
 
 	// Traits describes the platforms a game is available for,
 	// pricing information, etc.
-	Traits []string `json:"traits"`
+	Traits []GameTrait `json:"traits"`
 
 	// The user account this game is associated to
 	// @optional
@@ -200,7 +200,7 @@ type Upload struct {
 	Type UploadType `json:"type"`
 
 	// Traits describes platform availability, whether it's a demo upload etc.
-	Traits UploadTrait `json:"traits"`
+	Traits []UploadTrait `json:"traits"`
 
 	// Date this upload was created at
 	CreatedAt *time.Time `json:"createdAt"`
