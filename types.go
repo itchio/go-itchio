@@ -25,6 +25,18 @@ type User struct {
 	StillCoverURL string `json:"stillCoverUrl"`
 }
 
+type GameTrait string
+
+const (
+	GameTraitPlatformWindows GameTrait = "p_windows"
+	GameTraitPlatformLinux   GameTrait = "p_linux"
+	GameTraitPlatformOSX     GameTrait = "p_osx"
+	GameTraitPlatformAndroid GameTrait = "p_android"
+	GameTraitCanBeBoughts    GameTrait = "can_be_bought"
+	GameTraitHasDemo         GameTrait = "has_demo"
+	GameTraitInPressSystem   GameTrait = "in_press_system"
+)
+
 // Game represents a page on itch.io, it could be a game,
 // a tool, a comic, etc.
 type Game struct {
@@ -52,27 +64,16 @@ type Game struct {
 	StillCoverURL string `json:"stillCoverUrl"`
 
 	// Date the game was created
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 	// Date the game was published, empty if not currently published
-	PublishedAt time.Time `json:"publishedAt"`
+	PublishedAt *time.Time `json:"publishedAt"`
 
 	// Price in cents of a dollar
 	MinPrice int64 `json:"minPrice"`
-	// Can this game be bought?
-	CanBeBought bool `json:"canBeBought"`
-	// Is this game downloadable by press users for free?
-	InPressSystem bool `json:"inPressSystem"`
-	// Does this game have a demo that can be downloaded for free?
-	HasDemo bool `json:"hasDemo"`
 
-	// Does this game have an upload tagged with 'macOS compatible'? (creator-controlled)
-	OSX bool `json:"pOsx"`
-	// Does this game have an upload tagged with 'Linux compatible'? (creator-controlled)
-	Linux bool `json:"pLinux"`
-	// Does this game have an upload tagged with 'Windows compatible'? (creator-controlled)
-	Windows bool `json:"pWindows"`
-	// Does this game have an upload tagged with 'Android compatible'? (creator-controlled)
-	Android bool `json:"pAndroid"`
+	// Traits describes the platforms a game is available for,
+	// pricing information, etc.
+	Traits []string `json:"traits"`
 
 	// The user account this game is associated to
 	// @optional
@@ -167,6 +168,17 @@ type Sale struct {
 	EndDate string `json:"endDate"`
 }
 
+type UploadTrait string
+
+const (
+	UploadTraitWindows  UploadTrait = "p_windows"
+	UploadTraitLinux    UploadTrait = "p_linux"
+	UploadTraitOSX      UploadTrait = "p_osx"
+	UploadTraitAndroid  UploadTrait = "p_android"
+	UploadTraitPreorder UploadTrait = "preorder"
+	UploadTraitDemo     UploadTrait = "demo"
+)
+
 // An Upload is a downloadable file. Some are wharf-enabled, which means
 // they're actually a "channel" that may contain multiple builds, pushed
 // with <https://github.com/itchio/butler>
@@ -183,27 +195,17 @@ type Upload struct {
 	ChannelName string `json:"channelName"`
 	// Latest build for this upload, if it's a wharf-enabled upload
 	Build *Build `json:"build"`
-	// Is this upload a demo that can be downloaded for free?
-	Demo bool `json:"demo"`
-	// Is this upload a pre-order placeholder?
-	Preorder bool `json:"preorder"`
 
 	// Upload type: default, soundtrack, etc.
 	Type UploadType `json:"type"`
 
-	// Is this upload tagged with 'macOS compatible'? (creator-controlled)
-	OSX bool `json:"pOsx"`
-	// Is this upload tagged with 'Linux compatible'? (creator-controlled)
-	Linux bool `json:"pLinux"`
-	// Is this upload tagged with 'Windows compatible'? (creator-controlled)
-	Windows bool `json:"pWindows"`
-	// Is this upload tagged with 'Android compatible'? (creator-controlled)
-	Android bool `json:"pAndroid"`
+	// Traits describes platform availability, whether it's a demo upload etc.
+	Traits UploadTrait `json:"traits"`
 
 	// Date this upload was created at
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 	// Date this upload was last updated at (order changed, display name set, etc.)
-	UpdatedAt time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
 type UploadType string
@@ -242,17 +244,14 @@ type Collection struct {
 	Title string `json:"title"`
 
 	// Date this collection was created at
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 	// Date this collection was last updated at (item added, title set, etc.)
-	UpdatedAt time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// Number of games in the collection. This might not be accurate
 	// as some games might not be accessible to whoever is asking (project
 	// page deleted, visibility level changed, etc.)
 	GamesCount int64 `json:"gamesCount"`
-
-	// Games in this collection: filled in API response
-	Games []*Game `json:"games,omitempty" gorm:"many2many:collection_games"`
 
 	// Games in this collection, with additional info
 	CollectionGames []*CollectionGame `json:"collectionGames,omitempty"`
@@ -270,8 +269,8 @@ type CollectionGame struct {
 
 	Position int64 `json:"position"`
 
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt *time.Time `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	Blurb  string `json:"blurb"`
 	UserID int64  `json:"userId"`
@@ -291,9 +290,9 @@ type DownloadKey struct {
 	Game *Game `json:"game,omitempty"`
 
 	// Date this key was created at (often coincides with purchase time)
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 	// Date this key was last updated at
-	UpdatedAt time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// Identifier of the itch.io user to which this key belongs
 	OwnerID int64 `json:"ownerId"`
@@ -323,9 +322,9 @@ type Build struct {
 	// User who pushed the build
 	User *User `json:"user"`
 	// Timestamp the build was created at
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 	// Timestamp the build was last updated at
-	UpdatedAt time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
 // BuildState describes the state of a build, relative to its initial upload, and
@@ -362,9 +361,9 @@ type BuildFile struct {
 	SubType BuildFileSubType `json:"subType"`
 
 	// Date this build file was created at
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 	// Date this build file was last updated at
-	UpdatedAt time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
 // BuildFileState describes the state of a specific file for a build

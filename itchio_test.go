@@ -37,7 +37,7 @@ func testTools(code int, body string) (*httptest.Server, *Client) {
 	return server, client
 }
 
-func Test_ListMyGames(t *testing.T) {
+func Test_ListProfileGames(t *testing.T) {
 	server, client := testTools(200, `{
 		"games": [
 		  {"url": "https://kenney.itch.io/barb", "id": 123, "min_price": 5000},
@@ -46,7 +46,7 @@ func Test_ListMyGames(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	games, err := client.ListMyGames()
+	games, err := client.ListProfileGames()
 	assert.NoError(t, err)
 	assert.EqualValues(t, len(games.Games), 2)
 	assert.EqualValues(t, games.Games[0].ID, 123)
@@ -54,7 +54,7 @@ func Test_ListMyGames(t *testing.T) {
 	assert.EqualValues(t, games.Games[0].MinPrice, 5000)
 }
 
-func Test_ListMyGamesError(t *testing.T) {
+func Test_ListProfileGamesError(t *testing.T) {
 	server, client := testTools(200, `{
 		"errors": [
 		  "invalid game" 
@@ -62,7 +62,7 @@ func Test_ListMyGamesError(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	_, err := client.ListMyGames()
+	_, err := client.ListProfileGames()
 	assert.Error(t, err)
 	assert.True(t, IsAPIError(err))
 	assert.EqualValues(t, "itch.io API error: invalid game", err.Error())
@@ -85,6 +85,6 @@ func Test_ParseSpec(t *testing.T) {
 	err = spec.EnsureChannel()
 	assert.Error(t, err)
 
-	spec, err = ParseSpec("a:b:c")
+	_, err = ParseSpec("a:b:c")
 	assert.Error(t, err)
 }
