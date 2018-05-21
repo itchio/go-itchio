@@ -2,7 +2,6 @@ package itchio
 
 import (
 	"encoding/json"
-	"net/url"
 
 	"github.com/pkg/errors"
 )
@@ -185,25 +184,16 @@ var (
 	ErrBuildFileNotFound = errors.New("build file not found in storage")
 )
 
-// GetBuildFileDownloadURL returns a download URL for a given build file
-func (c *Client) GetBuildFileDownloadURL(buildID int64, fileID int64) (*DownloadBuildFileResponse, error) {
-	return c.GetBuildFileDownloadURLWithValues(buildID, fileID, nil)
+type MakeBuildFileDownloadURLParams struct {
+	BuildID int64
+	FileID  int64
 }
 
-// GetBuildFileDownloadURLWithValues returns a download URL for a given build file, with additional query parameters
-func (c *Client) GetBuildFileDownloadURLWithValues(buildID int64, fileID int64, values url.Values) (*DownloadBuildFileResponse, error) {
-	r := &DownloadBuildFileResponse{}
-	path := c.MakePath("wharf/builds/%d/files/%d/download", buildID, fileID)
-	if values != nil {
-		path = path + "?" + values.Encode()
-	}
-
-	err := c.GetResponse(path, r)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return r, nil
+// GetBuildFileDownloadURL returns a download URL for a given build file
+func (c *Client) MakeBuildFileDownloadURL(p *MakeBuildFileDownloadURLParams) string {
+	q := NewQuery(c, "/wharf/builds/%d/files/%d/download", p.BuildID, p.FileID)
+	q.AddAPICredentials()
+	return q.URL()
 }
 
 //-------------------------------------------------------

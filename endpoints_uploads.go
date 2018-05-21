@@ -1,9 +1,5 @@
 package itchio
 
-import (
-	"github.com/pkg/errors"
-)
-
 type GameCredentials struct {
 	DownloadKeyID int64
 	Password      string
@@ -140,15 +136,11 @@ type MakeUploadDownloadParams struct {
 	Credentials GameCredentials
 }
 
-func (c *Client) MakeUploadDownloadURL(p *MakeUploadDownloadParams) (string, error) {
-	if p.UploadID == 0 {
-		return "", errors.Errorf("UploadID must be set")
-	}
-
+func (c *Client) MakeUploadDownloadURL(p *MakeUploadDownloadParams) string {
 	q := NewQuery(c, "uploads/%d/download", p.UploadID)
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
-	return q.URL(), nil
+	return q.URL()
 }
 
 //-------------------------------------------------------
@@ -167,14 +159,7 @@ type MakeBuildDownloadParams struct {
 	Credentials GameCredentials
 }
 
-func (c *Client) MakeBuildDownloadURL(p *MakeBuildDownloadParams) (string, error) {
-	if p.BuildID == 0 {
-		return "", errors.Errorf("BuildID must be set")
-	}
-	if p.Type == "" {
-		return "", errors.Errorf("Type must be set")
-	}
-
+func (c *Client) MakeBuildDownloadURL(p *MakeBuildDownloadParams) string {
 	subType := p.SubType
 	if subType == "" {
 		subType = BuildFileSubTypeDefault
@@ -183,5 +168,5 @@ func (c *Client) MakeBuildDownloadURL(p *MakeBuildDownloadParams) (string, error
 	q := NewQuery(c, "builds/%d/download/%s/%s", p.BuildID, p.Type, subType)
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
-	return q.URL(), nil
+	return q.URL()
 }
