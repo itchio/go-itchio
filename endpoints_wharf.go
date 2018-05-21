@@ -135,11 +135,11 @@ type FileUploadSpec struct {
 }
 
 type CreateBuildFileParams struct {
-	BuildID    int64
-	Type       BuildFileType
-	SubType    BuildFileSubType
-	UploadType UploadType
-	Filename   string
+	BuildID        int64
+	Type           BuildFileType
+	SubType        BuildFileSubType
+	FileUploadType FileUploadType
+	Filename       string
 }
 
 // CreateBuildFileResponse is what the API responds when we create a new build file
@@ -152,7 +152,7 @@ func (c *Client) CreateBuildFile(p *CreateBuildFileParams) (*CreateBuildFileResp
 	q := NewQuery(c, "/wharf/builds/%d/files", p.BuildID)
 	q.AddString("type", string(p.Type))
 	q.AddStringIfNonEmpty("sub_type", string(p.SubType))
-	q.AddStringIfNonEmpty("upload_type", string(p.UploadType))
+	q.AddStringIfNonEmpty("upload_type", string(p.FileUploadType))
 	q.AddStringIfNonEmpty("filename", p.Filename)
 	r := &CreateBuildFileResponse{}
 	return r, q.Post(r)
