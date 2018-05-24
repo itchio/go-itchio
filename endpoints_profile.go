@@ -31,7 +31,7 @@ func (c *Client) ListProfileGames() (*ListProfileGamesResponse, error) {
 
 //-------------------------------------------------------
 
-// ListProfileOwnedKeysResponse is the response for /my-owned-keys
+// ListProfileOwnedKeysResponse is the response for /profile/owned-keys
 type ListProfileOwnedKeysResponse struct {
 	OwnedKeys []*DownloadKey `json:"ownedKeys"`
 }
@@ -45,7 +45,7 @@ func (c *Client) ListProfileOwnedKeys() (*ListProfileOwnedKeysResponse, error) {
 
 //-------------------------------------------------------
 
-// ListProfileCollectionsResponse is the response for /my-collections
+// ListProfileCollectionsResponse is the response for /profile/collections
 type ListProfileCollectionsResponse struct {
 	Collections []*Collection `json:"collections"`
 }
