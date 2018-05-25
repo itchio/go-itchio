@@ -57,6 +57,11 @@ func (q *Query) AddAPICredentials() {
 	q.Values.Add("api_key", q.Client.Key)
 }
 
+func (q *Query) AddWharfAPICredentials() {
+	// FIXME: remove workaround when server fix is deployed
+	q.Values.Add("key", q.Client.Key)
+}
+
 func (q *Query) AddGameCredentials(gc GameCredentials) {
 	q.AddInt64IfNonZero("download_key_id", gc.DownloadKeyID)
 	q.AddStringIfNonEmpty("password", gc.Password)

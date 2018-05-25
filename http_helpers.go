@@ -18,17 +18,12 @@ import (
 
 var dumpApiCalls = os.Getenv("GO_ITCHIO_DEBUG") == "1"
 
-func (c *Client) prepareRequest(req *http.Request) {
-	req.Header.Set("Accept", "application/vnd.itch.v2")
-}
-
 // Get performs an HTTP GET request to the API
 func (c *Client) Get(url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	c.prepareRequest(req)
 	return c.Do(req)
 }
 
@@ -52,7 +47,6 @@ func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.prepareRequest(req)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	return c.Do(req)
 }
@@ -76,12 +70,18 @@ func (c *Client) PostFormResponse(url string, data url.Values, dst interface{}) 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", c.Key)
 	req.Header.Set("User-Agent", c.UserAgent)
+	req.Header.Set("Accept", "application/vnd.itch.v2")
 
 	var res *http.Response
 	var err error
 
 	if dumpApiCalls {
 		fmt.Fprintf(os.Stderr, "[request] %s %s\n", req.Method, req.URL)
+		for k, vv := range req.Header {
+			for _, v := range vv {
+				fmt.Fprintf(os.Stderr, "[request] %s: %s\n", k, v)
+			}
+		}
 	}
 
 	retryPatterns := append(c.RetryPatterns, time.Millisecond)
