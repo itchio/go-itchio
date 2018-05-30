@@ -101,4 +101,27 @@ func Test_Integration(t *testing.T) {
 
 	assert.EqualValues(t, af.Size, len(buildFileBytes))
 	assert.EqualValues(t, buildBytes, buildFileBytes)
+
+	t.Logf("Looking for upgrade paths")
+	var oldBuild int64 = 64011
+	var newBuild int64 = 64020
+	pathRes, err := c.GetBuildUpgradePath(&GetBuildUpgradePathParams{
+		CurrentBuildID: oldBuild,
+		TargetBuildID:  newBuild,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, pathRes.UpgradePath)
+	assert.NotEmpty(t, pathRes.UpgradePath.Builds)
+
+	var foundOld, foundNew bool
+	for _, b := range pathRes.UpgradePath.Builds {
+		if b.ID == oldBuild {
+			foundOld = true
+		}
+		if b.ID == newBuild {
+			foundNew = true
+		}
+	}
+	assert.True(t, foundOld)
+	assert.True(t, foundNew)
 }

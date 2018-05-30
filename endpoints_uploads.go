@@ -99,6 +99,10 @@ type GetBuildUpgradePathParams struct {
 }
 
 type GetBuildUpgradePathResponse struct {
+	UpgradePath *UpgradePath `json:"upgradePath"`
+}
+
+type UpgradePath struct {
 	Builds []*Build `json:"builds"`
 }
 
