@@ -7,37 +7,36 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GameTraits struct {
+type UploadTraits struct {
 	PlatformWindows bool `trait:"p_windows"`
 	PlatformLinux   bool `trait:"p_linux"`
 	PlatformOSX     bool `trait:"p_osx"`
 	PlatformAndroid bool `trait:"p_android"`
-	CanBeBought     bool `trait:"can_be_bought"`
-	HasDemo         bool `trait:"has_demo"`
-	InPressSystem   bool `trait:"in_press_system"`
+	Preorder        bool `trait:"preorder"`
+	Demo            bool `trait:"demo"`
 }
 
-var _ json.Marshaler = GameTraits{}
-var _ json.Unmarshaler = (*GameTraits)(nil)
+var _ json.Marshaler = UploadTraits{}
+var _ json.Unmarshaler = (*UploadTraits)(nil)
 
-var gameTraitMap map[string]int
-var gameTraitList []string
+var uploadTraitMap map[string]int
+var uploadTraitList []string
 
 func init() {
-	typ := reflect.TypeOf(GameTraits{})
-	gameTraitList = make([]string, typ.NumField())
-	gameTraitMap = make(map[string]int)
+	typ := reflect.TypeOf(UploadTraits{})
+	uploadTraitList = make([]string, typ.NumField())
+	uploadTraitMap = make(map[string]int)
 	for i := 0; i < typ.NumField(); i++ {
 		trait := typ.Field(i).Tag.Get("trait")
-		gameTraitMap[trait] = i
-		gameTraitList[i] = trait
+		uploadTraitMap[trait] = i
+		uploadTraitList[i] = trait
 	}
 }
 
-func (tt GameTraits) MarshalJSON() ([]byte, error) {
+func (tt UploadTraits) MarshalJSON() ([]byte, error) {
 	var traits []string
 	val := reflect.ValueOf(tt)
-	for i, trait := range gameTraitList {
+	for i, trait := range uploadTraitList {
 		if val.Field(i).Bool() {
 			traits = append(traits, trait)
 		}
@@ -45,7 +44,7 @@ func (tt GameTraits) MarshalJSON() ([]byte, error) {
 	return json.Marshal(traits)
 }
 
-func (tt *GameTraits) UnmarshalJSON(data []byte) error {
+func (tt *UploadTraits) UnmarshalJSON(data []byte) error {
 	var traits []string
 	err := json.Unmarshal(data, &traits)
 	if err != nil {
@@ -54,31 +53,31 @@ func (tt *GameTraits) UnmarshalJSON(data []byte) error {
 
 	val := reflect.ValueOf(tt).Elem()
 	for _, trait := range traits {
-		val.Field(gameTraitMap[trait]).SetBool(true)
+		val.Field(uploadTraitMap[trait]).SetBool(true)
 	}
 	return nil
 }
 
-func GameTraitHookFunc(
+func UploadTraitHookFunc(
 	f reflect.Type,
 	t reflect.Type,
 	data interface{}) (interface{}, error) {
 
-	if t != reflect.TypeOf(GameTraits{}) {
+	if t != reflect.TypeOf(UploadTraits{}) {
 		return data, nil
 	}
 
 	if f.Kind() != reflect.Slice {
-		return nil, errors.Errorf("expected game.traits to be a slice")
+		return nil, errors.Errorf("expected upload.traits to be a slice")
 	}
 
-	var tt GameTraits
+	var tt UploadTraits
 	val := reflect.ValueOf(&tt).Elem()
 
 	var traits = data.([]interface{})
 	for _, k := range traits {
 		if trait, ok := k.(string); ok {
-			val.Field(gameTraitMap[trait]).SetBool(true)
+			val.Field(uploadTraitMap[trait]).SetBool(true)
 		}
 	}
 

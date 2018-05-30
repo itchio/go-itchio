@@ -187,6 +187,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeHookFunc(time.RFC3339Nano),
 			GameTraitHookFunc,
+			UploadTraitHookFunc,
 		),
 	})
 	if err != nil {

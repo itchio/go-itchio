@@ -158,17 +158,6 @@ type Sale struct {
 	EndDate string `json:"endDate"`
 }
 
-type UploadTrait string
-
-const (
-	UploadTraitWindows  UploadTrait = "p_windows"
-	UploadTraitLinux    UploadTrait = "p_linux"
-	UploadTraitOSX      UploadTrait = "p_osx"
-	UploadTraitAndroid  UploadTrait = "p_android"
-	UploadTraitPreorder UploadTrait = "preorder"
-	UploadTraitDemo     UploadTrait = "demo"
-)
-
 // An Upload is a downloadable file. Some are wharf-enabled, which means
 // they're actually a "channel" that may contain multiple builds, pushed
 // with <https://github.com/itchio/butler>
@@ -190,7 +179,7 @@ type Upload struct {
 	Type UploadType `json:"type"`
 
 	// Traits describes platform availability, whether it's a demo upload etc.
-	Traits []UploadTrait `json:"traits"`
+	Traits UploadTraits `json:"traits"`
 
 	// Date this upload was created at
 	CreatedAt *time.Time `json:"createdAt"`
