@@ -75,40 +75,97 @@ func Test_GameTraits(t *testing.T) {
 }
 
 func Benchmark_GameTraits(b *testing.B) {
-	b.Run("map-based", func(b *testing.B) {
+	b.Run("map simplest", func(b *testing.B) {
 		gt1 := GameTraits{
-			GameTraitPlatformAndroid: true,
+			GameTraitPlatformLinux:   true,
+			GameTraitPlatformWindows: true,
+			GameTraitPlatformOSX:     true,
 			GameTraitHasDemo:         true,
+			GameTraitCanBeBought:     true,
 		}
 
 		for n := 0; n < b.N; n++ {
 			data, _ := gt1.MarshalJSON()
 			var gt2 GameTraits
 			gt2.UnmarshalJSON(data)
-			if !gt2[GameTraitPlatformAndroid] {
-				panic("missing platform android")
-			}
-			if !gt2[GameTraitHasDemo] {
-				panic("missing has-demo")
+			if !(gt2[GameTraitPlatformWindows] && gt2[GameTraitPlatformOSX] && gt2[GameTraitPlatformLinux] && gt2[GameTraitHasDemo] && gt2[GameTraitCanBeBought]) {
+				panic("missing fields")
 			}
 		}
 	})
 
-	b.Run("struct-based", func(b *testing.B) {
+	b.Run("struct simplest", func(b *testing.B) {
 		gt1 := GameTraits2{
-			PlatformAndroid: true,
+			PlatformLinux:   true,
+			PlatformWindows: true,
+			PlatformOSX:     true,
 			HasDemo:         true,
+			CanBeBought:     true,
 		}
 
 		for n := 0; n < b.N; n++ {
 			data, _ := gt1.MarshalJSON()
 			var gt2 GameTraits2
 			gt2.UnmarshalJSON(data)
-			if !gt2.PlatformAndroid {
-				panic("missing platform android")
+			if !(gt2.PlatformWindows && gt2.PlatformOSX && gt2.PlatformLinux && gt2.HasDemo && gt2.CanBeBought) {
+				panic("missing fields")
 			}
-			if !gt2.HasDemo {
-				panic("missing has-demo")
+		}
+	})
+
+	b.Run("struct cachereflect", func(b *testing.B) {
+		gt1 := GameTraits2{
+			PlatformLinux:   true,
+			PlatformWindows: true,
+			PlatformOSX:     true,
+			HasDemo:         true,
+			CanBeBought:     true,
+		}
+
+		for n := 0; n < b.N; n++ {
+			data, _ := gt1.MarshalJSON2()
+			var gt2 GameTraits2
+			gt2.UnmarshalJSON2(data)
+			if !(gt2.PlatformWindows && gt2.PlatformOSX && gt2.PlatformLinux && gt2.HasDemo && gt2.CanBeBought) {
+				panic("missing fields")
+			}
+		}
+	})
+
+	b.Run("struct handrolled", func(b *testing.B) {
+		gt1 := GameTraits2{
+			PlatformLinux:   true,
+			PlatformWindows: true,
+			PlatformOSX:     true,
+			HasDemo:         true,
+			CanBeBought:     true,
+		}
+
+		for n := 0; n < b.N; n++ {
+			data, _ := gt1.MarshalJSON3()
+			var gt2 GameTraits2
+			gt2.UnmarshalJSON3(data)
+			if !(gt2.PlatformWindows && gt2.PlatformOSX && gt2.PlatformLinux && gt2.HasDemo && gt2.CanBeBought) {
+				panic("missing fields")
+			}
+		}
+	})
+
+	b.Run("unreasonably custom", func(b *testing.B) {
+		gt1 := GameTraits2{
+			PlatformLinux:   true,
+			PlatformWindows: true,
+			PlatformOSX:     true,
+			HasDemo:         true,
+			CanBeBought:     true,
+		}
+
+		for n := 0; n < b.N; n++ {
+			data, _ := gt1.MarshalJSON4()
+			var gt2 GameTraits2
+			gt2.UnmarshalJSON4(data)
+			if !(gt2.PlatformWindows && gt2.PlatformOSX && gt2.PlatformLinux && gt2.HasDemo && gt2.CanBeBought) {
+				panic("missing fields")
 			}
 		}
 	})
