@@ -15,9 +15,9 @@ type User struct {
 	DisplayName string `json:"displayName"`
 
 	// Has the user opted into creating games?
-	Developer bool `json:"developer" gorm:"-"`
+	Developer bool `json:"developer" hades:"-"`
 	// Is the user part of itch.io's press program?
-	PressUser bool `json:"pressUser" gorm:"-"`
+	PressUser bool `json:"pressUser" hades:"-"`
 
 	// The address of the user's page on itch.io
 	URL string `json:"url"`
@@ -63,7 +63,7 @@ type Game struct {
 
 	// Traits describes the platforms a game is available for,
 	// pricing information, etc.
-	Traits GameTraits `json:"traits"`
+	Traits GameTraits `json:"traits" hades:"squash"`
 
 	// The user account this game is associated to
 	// @optional
@@ -78,11 +78,11 @@ type Game struct {
 
 	// Owner-only fields
 
-	ViewsCount     int64 `json:"viewsCount,omitempty" gorm:"-"`
-	DownloadsCount int64 `json:"downloadsCount,omitempt" gorm:"-"`
-	PurchasesCount int64 `json:"purchasesCount,omitempt" gorm:"-"`
+	ViewsCount     int64 `json:"viewsCount,omitempty" hades:"-"`
+	DownloadsCount int64 `json:"downloadsCount,omitempt" hades:"-"`
+	PurchasesCount int64 `json:"purchasesCount,omitempt" hades:"-"`
 
-	Published bool `json:"published,omitempty" gorm:"-"`
+	Published bool `json:"published,omitempty" hades:"-"`
 }
 
 // Type of an itch.io game page, mostly related to
@@ -129,7 +129,7 @@ const (
 // Presentation information for embed games
 type GameEmbedData struct {
 	// Game this embed info is for
-	GameID int64 `json:"gameId" gorm:"primary_key;auto_increment:false"`
+	GameID int64 `json:"gameId" hades:"primary_key"`
 
 	// width of the initial viewport, in pixels
 	Width int64 `json:"width"`
@@ -240,10 +240,10 @@ type Collection struct {
 }
 
 type CollectionGame struct {
-	CollectionID int64       `json:"collectionId" gorm:"primary_key;auto_increment:false"`
+	CollectionID int64       `json:"collectionId" hades:"primary_key"`
 	Collection   *Collection `json:"collection,omitempty"`
 
-	GameID int64 `json:"gameId" gorm:"primary_key;auto_increment:false"`
+	GameID int64 `json:"gameId" hades:"primary_key"`
 	Game   *Game `json:"game,omitempty"`
 
 	Position int64 `json:"position"`
