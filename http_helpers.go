@@ -184,7 +184,10 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 		Result:  dst,
 		// see https://github.com/itchio/itch/issues/1549
 		WeaklyTypedInput: true,
-		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339Nano),
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeHookFunc(time.RFC3339Nano),
+			GameTraitHookFunc,
+		),
 	})
 	if err != nil {
 		return errors.WithStack(err)

@@ -1,6 +1,8 @@
 package itchio
 
-import "time"
+import (
+	"time"
+)
 
 // User represents an itch.io account, with basic profile info
 type User struct {
@@ -24,18 +26,6 @@ type User struct {
 	// Static version of user's avatar, only set if the main cover URL is a GIF
 	StillCoverURL string `json:"stillCoverUrl"`
 }
-
-type GameTrait string
-
-const (
-	GameTraitPlatformWindows GameTrait = "p_windows"
-	GameTraitPlatformLinux   GameTrait = "p_linux"
-	GameTraitPlatformOSX     GameTrait = "p_osx"
-	GameTraitPlatformAndroid GameTrait = "p_android"
-	GameTraitCanBeBoughts    GameTrait = "can_be_bought"
-	GameTraitHasDemo         GameTrait = "has_demo"
-	GameTraitInPressSystem   GameTrait = "in_press_system"
-)
 
 // Game represents a page on itch.io, it could be a game,
 // a tool, a comic, etc.
@@ -73,7 +63,7 @@ type Game struct {
 
 	// Traits describes the platforms a game is available for,
 	// pricing information, etc.
-	Traits []GameTrait `json:"traits"`
+	Traits GameTraits `json:"traits"`
 
 	// The user account this game is associated to
 	// @optional
