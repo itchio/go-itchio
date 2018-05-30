@@ -192,7 +192,7 @@ type MakeBuildFileDownloadURLParams struct {
 // GetBuildFileDownloadURL returns a download URL for a given build file
 func (c *Client) MakeBuildFileDownloadURL(p *MakeBuildFileDownloadURLParams) string {
 	q := NewQuery(c, "/wharf/builds/%d/files/%d/download", p.BuildID, p.FileID)
-	q.AddWharfAPICredentials()
+	q.AddAPICredentials()
 	return q.URL()
 }
 
