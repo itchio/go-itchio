@@ -214,3 +214,13 @@ func FindBuildFile(fileType BuildFileType, files []*BuildFile) *BuildFile {
 
 	return nil
 }
+
+func FindBuildFileEx(fileType BuildFileType, fileSubType BuildFileSubType, files []*BuildFile) *BuildFile {
+	for _, f := range files {
+		if f.Type == fileType && f.SubType == fileSubType && f.State == BuildFileStateUploaded {
+			return f
+		}
+	}
+
+	return nil
+}
