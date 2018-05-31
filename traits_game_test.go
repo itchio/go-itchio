@@ -63,4 +63,31 @@ func Test_GameTraits(t *testing.T) {
 
 		assert.EqualValues(t, g1, g2)
 	}
+
+	{
+		g1 := Game{
+			ID: 123,
+		}
+		marshalled := []byte(`{
+			"id": 123,
+			"traits": {}
+		}`)
+
+		intermediate := make(map[string]interface{})
+		err := json.Unmarshal(marshalled, &intermediate)
+		assert.NoError(t, err)
+
+		var g2 Game
+		dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+			TagName:          "json",
+			DecodeHook:       GameTraitHookFunc,
+			WeaklyTypedInput: true,
+			Result:           &g2,
+		})
+		assert.NoError(t, err)
+		err = dec.Decode(intermediate)
+		assert.NoError(t, err)
+
+		assert.EqualValues(t, g1, g2)
+	}
 }
