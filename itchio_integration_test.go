@@ -27,7 +27,24 @@ func Test_Integration(t *testing.T) {
 	assert.NotNil(t, p.User)
 	assert.EqualValues(t, "itch-test-account", p.User.Username)
 
+	var testCollID int64 = 105002
 	var testGameID int64 = 141753
+
+	t.Logf("Retrieving collection...")
+	collRes, err := c.GetCollection(&GetCollectionParams{
+		CollectionID: testCollID,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, collRes.Collection)
+	assert.NotEmpty(t, collRes.Collection.Title)
+
+	t.Logf("Retrieving collection games...")
+	collGamesRes, err := c.GetCollectionGames(&GetCollectionGamesParams{
+		CollectionID: testCollID,
+		Page:         0,
+	})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, collGamesRes.CollectionGames)
 
 	t.Logf("Retrieving game...")
 	g, err := c.GetGame(&GetGameParams{
