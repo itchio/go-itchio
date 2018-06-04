@@ -19,6 +19,25 @@ func Test_Integration(t *testing.T) {
 		t.Skipf("Skipping integration tests (short mode)")
 	}
 
+	{
+		t.Logf("Failing login")
+		c := ClientWithKey("<nope>")
+		res, err := c.LoginWithPassword(&LoginWithPasswordParams{
+			Username: "itch-test-account",
+			Password: "nope",
+		})
+		if err == nil && res.RecaptchaNeeded {
+			t.Logf("Failing recaptcha...")
+			_, err = c.LoginWithPassword(&LoginWithPasswordParams{
+				Username:          "itch-test-account",
+				Password:          "nope",
+				RecaptchaResponse: "oooh nope.",
+			})
+		}
+
+		assert.Error(t, err)
+	}
+
 	c := ClientWithKey(apiKey)
 
 	t.Logf("Retrieving profile...")
