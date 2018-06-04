@@ -20,7 +20,7 @@ type LoginWithPasswordResponse struct {
 	Cookie Cookie  `json:"cookie"`
 }
 
-func (c *Client) LoginWithPassword(params *LoginWithPasswordParams) (*LoginWithPasswordResponse, error) {
+func (c *Client) LoginWithPassword(params LoginWithPasswordParams) (*LoginWithPasswordResponse, error) {
 	q := NewQuery(c, "/login")
 	q.AddString("source", "desktop")
 	q.AddString("username", params.Username)
@@ -43,7 +43,7 @@ type TOTPVerifyResponse struct {
 	Cookie Cookie  `json:"cookie"`
 }
 
-func (c *Client) TOTPVerify(params *TOTPVerifyParams) (*TOTPVerifyResponse, error) {
+func (c *Client) TOTPVerify(params TOTPVerifyParams) (*TOTPVerifyResponse, error) {
 	q := NewQuery(c, "/totp/verify")
 	q.AddString("token", params.Token)
 	q.AddString("code", params.Code)
@@ -64,7 +64,7 @@ type SubkeyResponse struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
-func (c *Client) Subkey(params *SubkeyParams) (*SubkeyResponse, error) {
+func (c *Client) Subkey(params SubkeyParams) (*SubkeyResponse, error) {
 	q := NewQuery(c, "/credentials/subkey")
 	q.AddInt64("game_id", params.GameID)
 	q.AddString("scope", params.Scope)

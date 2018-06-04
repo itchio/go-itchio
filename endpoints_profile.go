@@ -43,7 +43,7 @@ type ListProfileOwnedKeysResponse struct {
 }
 
 // ListProfileOwnedKeys lists the download keys one owns
-func (c *Client) ListProfileOwnedKeys(p *ListProfileOwnedKeysParams) (*ListProfileOwnedKeysResponse, error) {
+func (c *Client) ListProfileOwnedKeys(p ListProfileOwnedKeysParams) (*ListProfileOwnedKeysResponse, error) {
 	q := NewQuery(c, "/profile/owned-keys")
 	q.AddInt64IfNonZero("page", p.Page)
 	r := &ListProfileOwnedKeysResponse{}
