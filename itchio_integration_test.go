@@ -27,6 +27,18 @@ func Test_Integration(t *testing.T) {
 	assert.NotNil(t, p.User)
 	assert.EqualValues(t, "itch-test-account", p.User.Username)
 
+	t.Logf("Retrieving owned keys...")
+	ownedKeysRes, err := c.ListProfileOwnedKeys(&ListProfileOwnedKeysParams{})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, ownedKeysRes.OwnedKeys)
+
+	ownedKeysRes, err = c.ListProfileOwnedKeys(&ListProfileOwnedKeysParams{
+		// if this tests ever breaks, we're doing well
+		Page: 200,
+	})
+	assert.NoError(t, err)
+	assert.Empty(t, ownedKeysRes.OwnedKeys)
+
 	var testCollID int64 = 105002
 	var testGameID int64 = 141753
 
