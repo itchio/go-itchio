@@ -84,8 +84,8 @@ func Test_Integration(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, g.Game)
 	assert.EqualValues(t, "xna4-test", g.Game.Title)
-	assert.True(t, g.Game.Traits.PlatformWindows)
-	assert.False(t, g.Game.Traits.PlatformLinux)
+	assert.EqualValues(t, ArchitecturesAll, g.Game.Platforms.Windows)
+	assert.Empty(t, g.Game.Platforms.Linux)
 
 	t.Logf("Listing uploads...")
 	lu, err := c.ListGameUploads(ListGameUploadsParams{
@@ -95,8 +95,7 @@ func Test_Integration(t *testing.T) {
 	assert.EqualValues(t, 1, len(lu.Uploads))
 
 	up := lu.Uploads[0]
-	assert.True(t, up.Traits.PlatformWindows)
-	assert.False(t, up.Traits.PlatformAndroid)
+	assert.EqualValues(t, ArchitecturesAll, up.Platforms.Windows)
 	t.Logf("Listing builds for upload %d...", up.ID)
 	lb, err := c.ListUploadBuilds(ListUploadBuildsParams{
 		UploadID: up.ID,
