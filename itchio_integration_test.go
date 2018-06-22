@@ -85,7 +85,7 @@ func Test_Integration(t *testing.T) {
 	assert.NotNil(t, g.Game)
 	assert.EqualValues(t, "xna4-test", g.Game.Title)
 	assert.EqualValues(t, ArchitecturesAll, g.Game.Platforms.Windows)
-	assert.Empty(t, g.Game.Platforms.Linux)
+	assert.EqualValues(t, "", g.Game.Platforms.Linux)
 
 	t.Logf("Listing uploads...")
 	lu, err := c.ListGameUploads(ListGameUploadsParams{
