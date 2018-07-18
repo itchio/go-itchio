@@ -6,8 +6,8 @@ import (
 )
 
 type APIError struct {
-	Messages   []string
-	StatusCode int
+	Messages   []string `json:"messages"`
+	StatusCode int      `json:"statusCode"`
 }
 
 var _ error = (*APIError)(nil)
