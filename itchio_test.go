@@ -14,7 +14,7 @@ import (
 func testTools(code int, body string) (*httptest.Server, *Client) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
+		w.WriteHeader(code)
 		fmt.Fprintln(w, body)
 	}))
 
@@ -55,7 +55,7 @@ func Test_ListProfileGames(t *testing.T) {
 }
 
 func Test_ListProfileGamesError(t *testing.T) {
-	server, client := testTools(200, `{
+	server, client := testTools(400, `{
 		"errors": [
 		  "invalid game" 
 		]
@@ -65,7 +65,7 @@ func Test_ListProfileGamesError(t *testing.T) {
 	_, err := client.ListProfileGames()
 	assert.Error(t, err)
 	assert.True(t, IsAPIError(err))
-	assert.EqualValues(t, "itch.io API error: invalid game", err.Error())
+	assert.EqualValues(t, "itch.io API error (400): invalid game", err.Error())
 }
 
 func Test_ParseSpec(t *testing.T) {
