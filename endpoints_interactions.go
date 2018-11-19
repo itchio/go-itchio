@@ -59,7 +59,7 @@ type CreateUserGameSessionParams struct {
 	// as the request time, because the session may be "uploaded"
 	// later than it is being recorded. This happens especially
 	// if the session was recorded when offline.
-	LastTouchedAt *time.Time
+	LastRunAt *time.Time
 	// Upload being run this session
 	UploadID int64
 	// Optional (if the upload is not wharf-enabled): build being run this session
@@ -83,7 +83,7 @@ func (c *Client) CreateUserGameSession(p CreateUserGameSessionParams) (*CreateUs
 	q := NewQuery(c, "/games/%d/interactions/sessions", p.GameID)
 	q.AddGameCredentials(p.Credentials)
 	q.AddInt64("seconds_run", p.SecondsRun)
-	q.AddTimePtr("last_touched_at", p.LastTouchedAt)
+	q.AddTimePtr("last_run_at", p.LastRunAt)
 	q.AddInt64("upload_id", p.UploadID)
 	q.AddInt64IfNonZero("build_id", p.BuildID)
 	r := &CreateUserGameSessionResponse{}
@@ -99,8 +99,8 @@ type UpdateUserGameSessionParams struct {
 	// The ID of the game this session is for
 	GameID int64
 
-	SecondsRun    int64
-	LastTouchedAt *time.Time
+	SecondsRun int64
+	LastRunAt  *time.Time
 
 	Credentials GameCredentials
 }
@@ -117,7 +117,7 @@ func (c *Client) UpdateUserGameSession(p UpdateUserGameSessionParams) (*UpdateUs
 	q := NewQuery(c, "/games/%d/interactions/sessions/%d", p.GameID, p.SessionID)
 	q.AddGameCredentials(p.Credentials)
 	q.AddInt64("seconds_run", p.SecondsRun)
-	q.AddTimePtr("last_touched_at", p.LastTouchedAt)
+	q.AddTimePtr("last_run_at", p.LastRunAt)
 	r := &UpdateUserGameSessionResponse{}
 	return r, q.Post(r)
 }
