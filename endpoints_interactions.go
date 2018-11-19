@@ -9,8 +9,8 @@ import "time"
 // UserGameInteractionsSummary gives the latest "run at" timestamp and the
 // sum of seconds run for all sessions.
 type UserGameInteractionsSummary struct {
-	SecondsRun int64      `json:"seconds_run"`
-	LastRunAt  *time.Time `json:"last_run_at"`
+	SecondsRun int64      `json:"secondsRun"`
+	LastRunAt  *time.Time `json:"lastRunAt"`
 }
 
 // UserGameSession represents a single continuous run for a game.
@@ -18,9 +18,9 @@ type UserGameSession struct {
 	// ID is the global itch.io identifier for this session
 	ID int64 `json:"id"`
 	// SecondsRun is the number of seconds the game has run during this session.
-	SecondsRun int64 `json:"seconds_run"`
+	SecondsRun int64 `json:"secondsRun"`
 	// LastRunAt is the time this session ended.
-	LastRunAt *time.Time `json:"last_run_at"`
+	LastRunAt *time.Time `json:"lastRunAt"`
 }
 
 /////////////////////////////
@@ -37,7 +37,7 @@ type GetUserGameSessionsParams struct {
 // GetUserGameSessionsResponse : response for GetUserGameSessions
 type GetUserGameSessionsResponse struct {
 	Summary          UserGameInteractionsSummary `json:"summary"`
-	UserGameSessions []*UserGameSession          `json:"user_game_sessions"`
+	UserGameSessions []*UserGameSession          `json:"userGameSessions"`
 }
 
 // GetUserGameSessions retrieves a summary of interactions with a game by user,
@@ -74,7 +74,7 @@ type CreateUserGameSessionResponse struct {
 	// A summary of interactions for this user+game
 	Summary *UserGameInteractionsSummary `json:"summary"`
 	// The freshly-created game session
-	UserGameSession *UserGameSession `json:"user_game_session"`
+	UserGameSession *UserGameSession `json:"userGameSession"`
 }
 
 // CreateUserGameSession creates a session for a user/game. It can
@@ -108,7 +108,7 @@ type UpdateUserGameSessionParams struct {
 // UpdateUserGameSessionResponse : response for UpdateUserGameSession
 type UpdateUserGameSessionResponse struct {
 	Summary         *UserGameInteractionsSummary `json:"summary"`
-	UserGameSession *UserGameSession             `json:"user_game_session"`
+	UserGameSession *UserGameSession             `json:"userGameSession"`
 }
 
 // UpdateUserGameSession updates an existing user+game session with a new
