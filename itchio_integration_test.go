@@ -105,7 +105,7 @@ func Test_Integration(t *testing.T) {
 
 	b := lb.Builds[0]
 	t.Logf("Downloading build %d", b.ID)
-	bURL := c.MakeBuildDownloadURL(MakeBuildDownloadParams{
+	bURL := c.MakeBuildDownloadURL(MakeBuildDownloadURLParams{
 		BuildID: b.ID,
 		Type:    BuildFileTypeArchive,
 		SubType: BuildFileSubTypeDefault,
