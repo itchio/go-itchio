@@ -65,7 +65,7 @@ func Test_ListProfileGamesError(t *testing.T) {
 	_, err := client.ListProfileGames()
 	assert.Error(t, err)
 	assert.True(t, IsAPIError(err))
-	assert.EqualValues(t, "itch.io API error (400): invalid game", err.Error())
+	assert.EqualValues(t, "itch.io API error (400): /profile/games: invalid game", err.Error())
 }
 
 func Test_ParseSpec(t *testing.T) {
