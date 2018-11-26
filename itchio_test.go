@@ -28,11 +28,9 @@ func testTools(code int, body string) (*httptest.Server, *Client) {
 	// Make a http.Client with the transport
 	httpClient := &http.Client{Transport: transport}
 
-	client := &Client{
-		Key:        "APIKEY",
-		HTTPClient: httpClient,
-		BaseURL:    server.URL,
-	}
+	client := ClientWithKey("APIKEY")
+	client.HTTPClient = httpClient
+	client.BaseURL = server.URL
 
 	return server, client
 }
