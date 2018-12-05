@@ -34,22 +34,6 @@ type GetUserGameSessionsParams struct {
 	Credentials GameCredentials
 }
 
-// GetUserGameSessionsResponse : response for GetUserGameSessions
-type GetUserGameSessionsResponse struct {
-	Summary          UserGameInteractionsSummary `json:"summary"`
-	UserGameSessions []*UserGameSession          `json:"userGameSessions"`
-}
-
-// GetUserGameSessions retrieves a summary of interactions with a game by user,
-// and the most recent sessions.
-func (c *Client) GetUserGameSessions(p GetUserGameSessionsParams) (*GetUserGameSessionsResponse, error) {
-	q := NewQuery(c, "/profile/game-sessions", p.GameID)
-	q.AddInt64IfNonZero("game_id", p.GameID)
-	q.AddGameCredentials(p.Credentials)
-	r := &GetUserGameSessionsResponse{}
-	return r, q.Get(r)
-}
-
 type SessionPlatform string
 
 const (
@@ -106,8 +90,8 @@ func (c *Client) CreateUserGameSession(p CreateUserGameSessionParams) (*CreateUs
 	q.AddTimePtr("last_run_at", p.LastRunAt)
 	q.AddInt64("upload_id", p.UploadID)
 	q.AddInt64IfNonZero("build_id", p.BuildID)
-	q.AddStringIfNonEmpty("platform", p.Platform)
-	q.AddStringIfNonEmpty("architecture", p.Architecture)
+	q.AddStringIfNonEmpty("platform", string(p.Platform))
+	q.AddStringIfNonEmpty("architecture", string(p.Architecture))
 	r := &CreateUserGameSessionResponse{}
 	return r, q.Post(r)
 }
