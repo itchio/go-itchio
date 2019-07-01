@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -44,7 +45,7 @@ func Test_ListProfileGames(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	games, err := client.ListProfileGames()
+	games, err := client.ListProfileGames(context.Background())
 	assert.NoError(t, err)
 	assert.EqualValues(t, len(games.Games), 2)
 	assert.EqualValues(t, games.Games[0].ID, 123)
@@ -60,7 +61,7 @@ func Test_ListProfileGamesError(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	_, err := client.ListProfileGames()
+	_, err := client.ListProfileGames(context.Background())
 	assert.Error(t, err)
 	assert.True(t, IsAPIError(err))
 	assert.EqualValues(t, "itch.io API error (400): /profile/games: invalid game", err.Error())

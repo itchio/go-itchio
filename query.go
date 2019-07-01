@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"time"
@@ -98,13 +99,13 @@ func (q *Query) URL() string {
 
 // Get performs this query as an HTTP GET request with the tied client.
 // Params are URL-encoded and added to the path, see URL().
-func (q *Query) Get(r interface{}) error {
-	return q.Client.GetResponse(q.URL(), r)
+func (q *Query) Get(ctx context.Context, r interface{}) error {
+	return q.Client.GetResponse(ctx, q.URL(), r)
 }
 
 // Post performs this query as an HTTP POST request with the tied client.
 // Parameters are URL-encoded and passed as the body of the POST request.
-func (q *Query) Post(r interface{}) error {
+func (q *Query) Post(ctx context.Context, r interface{}) error {
 	url := q.Client.MakePath(q.Path)
-	return q.Client.PostFormResponse(url, q.Values, r)
+	return q.Client.PostFormResponse(ctx, url, q.Values, r)
 }

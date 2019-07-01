@@ -2,6 +2,7 @@ package itchio
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -32,17 +33,18 @@ var (
 )
 
 // Get performs an HTTP GET request to the API
-func (c *Client) Get(url string) (*http.Response, error) {
+func (c *Client) Get(ctx context.Context, url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 	return c.Do(req)
 }
 
 // GetResponse performs an HTTP GET request and parses the API response.
-func (c *Client) GetResponse(url string, dst interface{}) error {
-	resp, err := c.Get(url)
+func (c *Client) GetResponse(ctx context.Context, url string, dst interface{}) error {
+	resp, err := c.Get(ctx, url)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -56,18 +58,19 @@ func (c *Client) GetResponse(url string, dst interface{}) error {
 }
 
 // PostForm performs an HTTP POST request to the API, with url-encoded parameters
-func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
+func (c *Client) PostForm(ctx context.Context, url string, data url.Values) (*http.Response, error) {
 	req, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	return c.Do(req)
 }
 
 // PostFormResponse performs an HTTP POST request to the API *and* parses the API response.
-func (c *Client) PostFormResponse(url string, data url.Values, dst interface{}) error {
-	resp, err := c.PostForm(url, data)
+func (c *Client) PostFormResponse(ctx context.Context, url string, data url.Values, dst interface{}) error {
+	resp, err := c.PostForm(ctx, url, data)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -83,7 +86,7 @@ func (c *Client) PostFormResponse(url string, data url.Values, dst interface{}) 
 // Do performs a request (any method). It takes care of JWT or API key
 // authentication, sets the proper user agent, has built-in retry,
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	c.Limiter.Wait()
+	c.Limiter.Wait(req.Context())
 	req.Header.Add("Authorization", c.Key)
 	req.Header.Set("User-Agent", c.UserAgent)
 	req.Header.Set("Accept-Language", c.AcceptedLanguage)

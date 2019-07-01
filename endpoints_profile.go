@@ -1,5 +1,7 @@
 package itchio
 
+import "context"
+
 //-------------------------------------------------------
 
 // GetProfileResponse is what the API server responds when we ask for the user's profile
@@ -8,10 +10,10 @@ type GetProfileResponse struct {
 }
 
 // GetProfile returns information about the user the current credentials belong to
-func (c *Client) GetProfile() (*GetProfileResponse, error) {
+func (c *Client) GetProfile(ctx context.Context) (*GetProfileResponse, error) {
 	q := NewQuery(c, "/profile")
 	r := &GetProfileResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -23,10 +25,10 @@ type ListProfileGamesResponse struct {
 }
 
 // ListProfileGames lists the games one develops (ie. can edit)
-func (c *Client) ListProfileGames() (*ListProfileGamesResponse, error) {
+func (c *Client) ListProfileGames(ctx context.Context) (*ListProfileGamesResponse, error) {
 	q := NewQuery(c, "/profile/games")
 	r := &ListProfileGamesResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -45,11 +47,11 @@ type ListProfileOwnedKeysResponse struct {
 
 // ListProfileOwnedKeys lists the download keys the account with
 // the current API key owns.
-func (c *Client) ListProfileOwnedKeys(p ListProfileOwnedKeysParams) (*ListProfileOwnedKeysResponse, error) {
+func (c *Client) ListProfileOwnedKeys(ctx context.Context, p ListProfileOwnedKeysParams) (*ListProfileOwnedKeysResponse, error) {
 	q := NewQuery(c, "/profile/owned-keys")
 	q.AddInt64IfNonZero("page", p.Page)
 	r := &ListProfileOwnedKeysResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -60,8 +62,8 @@ type ListProfileCollectionsResponse struct {
 }
 
 // ListProfileCollections lists the collections associated to a profile.
-func (c *Client) ListProfileCollections() (*ListProfileCollectionsResponse, error) {
+func (c *Client) ListProfileCollections(ctx context.Context) (*ListProfileCollectionsResponse, error) {
 	q := NewQuery(c, "/profile/collections")
 	r := &ListProfileCollectionsResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }

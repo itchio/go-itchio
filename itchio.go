@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/itchio/httpkit/rate"
 	"github.com/itchio/httpkit/timeout"
+	"golang.org/x/time/rate"
 )
 
+// OnRateLimited is the callback type for rate limiting events
 type OnRateLimited func(req *http.Request, res *http.Response)
 
 // A Client allows consuming the itch.io API
@@ -18,7 +19,7 @@ type Client struct {
 	RetryPatterns    []time.Duration
 	UserAgent        string
 	AcceptedLanguage string
-	Limiter          rate.Limiter
+	Limiter          *rate.Limiter
 
 	onRateLimited OnRateLimited
 }
@@ -47,6 +48,8 @@ func ClientWithKey(key string) *Client {
 	return c
 }
 
+// OnRateLimited allows registering a function that gets called
+// every time the server responds with 503
 func (c *Client) OnRateLimited(cb OnRateLimited) {
 	c.onRateLimited = cb
 }

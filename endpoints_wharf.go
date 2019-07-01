@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -15,10 +16,10 @@ type WharfStatusResponse struct {
 }
 
 // WharfStatus requests the status of the wharf infrastructure
-func (c *Client) WharfStatus() (*WharfStatusResponse, error) {
+func (c *Client) WharfStatus(ctx context.Context) (*WharfStatusResponse, error) {
 	q := NewQuery(c, "/wharf/status")
 	r := &WharfStatusResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -41,11 +42,11 @@ type Channel struct {
 }
 
 // ListChannels returns a list of the channels for a game
-func (c *Client) ListChannels(target string) (*ListChannelsResponse, error) {
+func (c *Client) ListChannels(ctx context.Context, target string) (*ListChannelsResponse, error) {
 	q := NewQuery(c, "/wharf/channels")
 	q.AddString("target", target)
 	r := &ListChannelsResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -56,11 +57,11 @@ type GetChannelResponse struct {
 }
 
 // GetChannel returns information about a given channel for a given game
-func (c *Client) GetChannel(target string, channel string) (*GetChannelResponse, error) {
+func (c *Client) GetChannel(ctx context.Context, target string, channel string) (*GetChannelResponse, error) {
 	q := NewQuery(c, "/wharf/channels/%s", channel)
 	q.AddString("target", target)
 	r := &GetChannelResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -85,13 +86,13 @@ type CreateBuildResponse struct {
 
 // CreateBuild creates a new build for a given user/game:channel, with
 // an optional user version
-func (c *Client) CreateBuild(p CreateBuildParams) (*CreateBuildResponse, error) {
+func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateBuildResponse, error) {
 	q := NewQuery(c, "/wharf/builds")
 	q.AddString("target", p.Target)
 	q.AddString("channel", p.Channel)
 	q.AddStringIfNonEmpty("user_version", p.UserVersion)
 	r := &CreateBuildResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -102,10 +103,10 @@ type ListBuildFilesResponse struct {
 }
 
 // ListBuildFiles returns a list of files associated to a build
-func (c *Client) ListBuildFiles(buildID int64) (*ListBuildFilesResponse, error) {
+func (c *Client) ListBuildFiles(ctx context.Context, buildID int64) (*ListBuildFilesResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/files", buildID)
 	r := &ListBuildFilesResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -149,14 +150,14 @@ type CreateBuildFileResponse struct {
 }
 
 // CreateBuildFile creates a new build file for a build.
-func (c *Client) CreateBuildFile(p CreateBuildFileParams) (*CreateBuildFileResponse, error) {
+func (c *Client) CreateBuildFile(ctx context.Context, p CreateBuildFileParams) (*CreateBuildFileResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/files", p.BuildID)
 	q.AddString("type", string(p.Type))
 	q.AddStringIfNonEmpty("sub_type", string(p.SubType))
 	q.AddStringIfNonEmpty("upload_type", string(p.FileUploadType))
 	q.AddStringIfNonEmpty("filename", p.Filename)
 	r := &CreateBuildFileResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -174,11 +175,11 @@ type FinalizeBuildFileResponse struct{}
 // FinalizeBuildFile marks the end of the upload for a build file.
 // It validates that the size of the file in storage is the same
 // we pass to this API call.
-func (c *Client) FinalizeBuildFile(p FinalizeBuildFileParams) (*FinalizeBuildFileResponse, error) {
+func (c *Client) FinalizeBuildFile(ctx context.Context, p FinalizeBuildFileParams) (*FinalizeBuildFileResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/files/%d", p.BuildID, p.FileID)
 	q.AddInt64("size", p.Size)
 	r := &FinalizeBuildFileResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -226,7 +227,7 @@ type BuildEventData map[string]interface{}
 type CreateBuildEventResponse struct{}
 
 // CreateBuildEvent associates a new build event to a build
-func (c *Client) CreateBuildEvent(p CreateBuildEventParams) (*CreateBuildEventResponse, error) {
+func (c *Client) CreateBuildEvent(ctx context.Context, p CreateBuildEventParams) (*CreateBuildEventResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/events", p.BuildID)
 	q.AddString("type", string(p.Type))
 	q.AddString("message", p.Message)
@@ -237,7 +238,7 @@ func (c *Client) CreateBuildEvent(p CreateBuildEventParams) (*CreateBuildEventRe
 	}
 	q.AddString("data", string(jsonData))
 	r := &CreateBuildEventResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -254,12 +255,12 @@ type CreateBuildFailureResponse struct{}
 
 // CreateBuildFailure marks a given build as failed. We get to specify an error message and
 // if it's a fatal error (if not, the build can be retried after a bit)
-func (c *Client) CreateBuildFailure(p CreateBuildFailureParams) (*CreateBuildFailureResponse, error) {
+func (c *Client) CreateBuildFailure(ctx context.Context, p CreateBuildFailureParams) (*CreateBuildFailureResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/failures", p.BuildID)
 	q.AddString("message", p.Message)
 	q.AddBoolIfTrue("fatal", p.Fatal)
 	r := &CreateBuildFailureResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -274,11 +275,11 @@ type CreateRediffBuildFailureParams struct {
 type CreateRediffBuildFailureResponse struct{}
 
 // CreateRediffBuildFailure marks a given build as having failed to rediff (optimize)
-func (c *Client) CreateRediffBuildFailure(p CreateRediffBuildFailureParams) (*CreateRediffBuildFailureResponse, error) {
+func (c *Client) CreateRediffBuildFailure(ctx context.Context, p CreateRediffBuildFailureParams) (*CreateRediffBuildFailureResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/failures/rediff", p.BuildID)
 	q.AddString("message", p.Message)
 	r := &CreateRediffBuildFailureResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -296,8 +297,8 @@ type BuildEvent struct {
 }
 
 // ListBuildEvents returns a series of events associated with a given build
-func (c *Client) ListBuildEvents(buildID int64) (*ListBuildEventsResponse, error) {
+func (c *Client) ListBuildEvents(ctx context.Context, buildID int64) (*ListBuildEventsResponse, error) {
 	q := NewQuery(c, "/wharf/builds/%d/events", buildID)
 	r := &ListBuildEventsResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }

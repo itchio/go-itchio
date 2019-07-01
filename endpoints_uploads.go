@@ -1,5 +1,7 @@
 package itchio
 
+import "context"
+
 // GameCredentials is your one-stop shop for all the
 // things that allow access to a game or its uploads, such as:
 // a download key, a password (for restricted pages), a secret
@@ -27,11 +29,11 @@ type ListGameUploadsResponse struct {
 
 // ListGameUploads lists the uploads for a game that we have access to with our API key
 // and game credentials.
-func (c *Client) ListGameUploads(p ListGameUploadsParams) (*ListGameUploadsResponse, error) {
+func (c *Client) ListGameUploads(ctx context.Context, p ListGameUploadsParams) (*ListGameUploadsResponse, error) {
 	q := NewQuery(c, "/games/%d/uploads", p.GameID)
 	q.AddGameCredentials(p.Credentials)
 	r := &ListGameUploadsResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -50,11 +52,11 @@ type GetUploadResponse struct {
 }
 
 // GetUpload retrieves information about a single upload, by ID.
-func (c *Client) GetUpload(params GetUploadParams) (*GetUploadResponse, error) {
+func (c *Client) GetUpload(ctx context.Context, params GetUploadParams) (*GetUploadResponse, error) {
 	q := NewQuery(c, "/uploads/%d", params.UploadID)
 	q.AddGameCredentials(params.Credentials)
 	r := &GetUploadResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -73,11 +75,11 @@ type ListUploadBuildsResponse struct {
 }
 
 // ListUploadBuilds lists recent builds for a given upload, by ID.
-func (c *Client) ListUploadBuilds(params ListUploadBuildsParams) (*ListUploadBuildsResponse, error) {
+func (c *Client) ListUploadBuilds(ctx context.Context, params ListUploadBuildsParams) (*ListUploadBuildsResponse, error) {
 	q := NewQuery(c, "/uploads/%d/builds", params.UploadID)
 	q.AddGameCredentials(params.Credentials)
 	r := &ListUploadBuildsResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -96,11 +98,11 @@ type GetBuildResponse struct {
 }
 
 // GetBuild retrieves info about a single build, by ID.
-func (c *Client) GetBuild(p GetBuildParams) (*GetBuildResponse, error) {
+func (c *Client) GetBuild(ctx context.Context, p GetBuildParams) (*GetBuildResponse, error) {
 	q := NewQuery(c, "/builds/%d", p.BuildID)
 	q.AddGameCredentials(p.Credentials)
 	r := &GetBuildResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -127,11 +129,11 @@ type UpgradePath struct {
 // GetBuildUpgradePath returns the complete list of builds one
 // needs to go through to go from one version to another.
 // It only works when upgrading (at the time of this writing).
-func (c *Client) GetBuildUpgradePath(p GetBuildUpgradePathParams) (*GetBuildUpgradePathResponse, error) {
+func (c *Client) GetBuildUpgradePath(ctx context.Context, p GetBuildUpgradePathParams) (*GetBuildUpgradePathResponse, error) {
 	q := NewQuery(c, "/builds/%d/upgrade-paths/%d", p.CurrentBuildID, p.TargetBuildID)
 	q.AddGameCredentials(p.Credentials)
 	r := &GetBuildUpgradePathResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -152,11 +154,11 @@ type NewDownloadSessionResponse struct {
 // for more accurate download analytics. Downloading multiple patch
 // and signature files may all be part of the same "download session":
 // upgrading a game to its latest version. It should only count as one download.
-func (c *Client) NewDownloadSession(p NewDownloadSessionParams) (*NewDownloadSessionResponse, error) {
+func (c *Client) NewDownloadSession(ctx context.Context, p NewDownloadSessionParams) (*NewDownloadSessionResponse, error) {
 	q := NewQuery(c, "/games/%d/download-sessions", p.GameID)
 	q.AddGameCredentials(p.Credentials)
 	r := &NewDownloadSessionResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------

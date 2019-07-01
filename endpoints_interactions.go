@@ -1,6 +1,9 @@
 package itchio
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 /////////////////////////////
 // types
@@ -82,7 +85,7 @@ type CreateUserGameSessionResponse struct {
 
 // CreateUserGameSession creates a session for a user/game. It can
 // be later updated.
-func (c *Client) CreateUserGameSession(p CreateUserGameSessionParams) (*CreateUserGameSessionResponse, error) {
+func (c *Client) CreateUserGameSession(ctx context.Context, p CreateUserGameSessionParams) (*CreateUserGameSessionResponse, error) {
 	q := NewQuery(c, "/profile/game-sessions")
 	q.AddGameCredentials(p.Credentials)
 	q.AddInt64("game_id", p.GameID)
@@ -93,7 +96,7 @@ func (c *Client) CreateUserGameSession(p CreateUserGameSessionParams) (*CreateUs
 	q.AddStringIfNonEmpty("platform", string(p.Platform))
 	q.AddStringIfNonEmpty("architecture", string(p.Architecture))
 	r := &CreateUserGameSessionResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 // UpdateUserGameSessionParams : params for UpdateUserGameSession
@@ -116,13 +119,13 @@ type UpdateUserGameSessionResponse struct {
 
 // UpdateUserGameSession updates an existing user+game session with a new
 // duration and timestamp.
-func (c *Client) UpdateUserGameSession(p UpdateUserGameSessionParams) (*UpdateUserGameSessionResponse, error) {
+func (c *Client) UpdateUserGameSession(ctx context.Context, p UpdateUserGameSessionParams) (*UpdateUserGameSessionResponse, error) {
 	q := NewQuery(c, "/profile/game-sessions/%d", p.SessionID)
 	q.AddInt64IfNonZero("seconds_run", p.SecondsRun)
 	q.AddTimePtr("last_run_at", p.LastRunAt)
 	q.AddBoolIfTrue("crashed", p.Crashed)
 	r := &UpdateUserGameSessionResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 type GetGameSessionsSummaryResponse struct {
@@ -130,8 +133,8 @@ type GetGameSessionsSummaryResponse struct {
 }
 
 // GetGameSessionsSummary returns a summary of game sessions for a given game.
-func (c *Client) GetGameSessionsSummary(gameID int64) (*GetGameSessionsSummaryResponse, error) {
+func (c *Client) GetGameSessionsSummary(ctx context.Context, gameID int64) (*GetGameSessionsSummaryResponse, error) {
 	q := NewQuery(c, "/profile/game-sessions/summaries/%d", gameID)
 	r := &GetGameSessionsSummaryResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }

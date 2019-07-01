@@ -1,5 +1,7 @@
 package itchio
 
+import "context"
+
 //-------------------------------------------------------
 
 // LoginWithPasswordParams : params for LoginWithPassword
@@ -29,7 +31,7 @@ type LoginWithPasswordResponse struct {
 // their username (or e-mail) and password.
 // The response may indicate that a TOTP code is needed (for two-factor auth),
 // or a recaptcha challenge is needed (an unfortunate remedy for an unfortunate ailment).
-func (c *Client) LoginWithPassword(params LoginWithPasswordParams) (*LoginWithPasswordResponse, error) {
+func (c *Client) LoginWithPassword(ctx context.Context, params LoginWithPasswordParams) (*LoginWithPasswordResponse, error) {
 	q := NewQuery(c, "/login")
 	q.AddString("source", "desktop")
 	q.AddString("username", params.Username)
@@ -37,7 +39,7 @@ func (c *Client) LoginWithPassword(params LoginWithPasswordParams) (*LoginWithPa
 	q.AddStringIfNonEmpty("recaptcha_response", params.RecaptchaResponse)
 
 	r := &LoginWithPasswordResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -56,13 +58,13 @@ type TOTPVerifyResponse struct {
 
 // TOTPVerify sends a user-entered TOTP token to the server for
 // verification (and to complete login).
-func (c *Client) TOTPVerify(params TOTPVerifyParams) (*TOTPVerifyResponse, error) {
+func (c *Client) TOTPVerify(ctx context.Context, params TOTPVerifyParams) (*TOTPVerifyResponse, error) {
 	q := NewQuery(c, "/totp/verify")
 	q.AddString("token", params.Token)
 	q.AddString("code", params.Code)
 
 	r := &TOTPVerifyResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -82,11 +84,11 @@ type SubkeyResponse struct {
 // Subkey creates a scoped-down, temporary offspring of the main
 // API key this client was created with. It is useful to automatically grant
 // some access to games being launched.
-func (c *Client) Subkey(params SubkeyParams) (*SubkeyResponse, error) {
+func (c *Client) Subkey(ctx context.Context, params SubkeyParams) (*SubkeyResponse, error) {
 	q := NewQuery(c, "/credentials/subkey")
 	q.AddInt64("game_id", params.GameID)
 	q.AddString("scope", params.Scope)
 
 	r := &SubkeyResponse{}
-	return r, q.Post(r)
+	return r, q.Post(ctx, r)
 }

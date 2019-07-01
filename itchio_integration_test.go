@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -19,16 +20,18 @@ func Test_Integration(t *testing.T) {
 		t.Skipf("Skipping integration tests (short mode)")
 	}
 
+	ctx := context.Background()
+
 	{
 		t.Logf("Failing login")
 		c := ClientWithKey("<nope>")
-		res, err := c.LoginWithPassword(LoginWithPasswordParams{
+		res, err := c.LoginWithPassword(ctx, LoginWithPasswordParams{
 			Username: "itch-test-account",
 			Password: "nope",
 		})
 		if err == nil && res.RecaptchaNeeded {
 			t.Logf("Failing recaptcha...")
-			_, err = c.LoginWithPassword(LoginWithPasswordParams{
+			_, err = c.LoginWithPassword(ctx, LoginWithPasswordParams{
 				Username:          "itch-test-account",
 				Password:          "nope",
 				RecaptchaResponse: "oooh nope.",
@@ -41,17 +44,17 @@ func Test_Integration(t *testing.T) {
 	c := ClientWithKey(apiKey)
 
 	t.Logf("Retrieving profile...")
-	p, err := c.GetProfile()
+	p, err := c.GetProfile(ctx)
 	assert.NoError(t, err)
 	assert.NotNil(t, p.User)
 	assert.EqualValues(t, "itch-test-account", p.User.Username)
 
 	t.Logf("Retrieving owned keys...")
-	ownedKeysRes, err := c.ListProfileOwnedKeys(ListProfileOwnedKeysParams{})
+	ownedKeysRes, err := c.ListProfileOwnedKeys(ctx, ListProfileOwnedKeysParams{})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, ownedKeysRes.OwnedKeys)
 
-	ownedKeysRes, err = c.ListProfileOwnedKeys(ListProfileOwnedKeysParams{
+	ownedKeysRes, err = c.ListProfileOwnedKeys(ctx, ListProfileOwnedKeysParams{
 		// if this tests ever breaks, we're doing well
 		Page: 200,
 	})
@@ -62,7 +65,7 @@ func Test_Integration(t *testing.T) {
 	var testGameID int64 = 141753
 
 	t.Logf("Retrieving collection...")
-	collRes, err := c.GetCollection(GetCollectionParams{
+	collRes, err := c.GetCollection(ctx, GetCollectionParams{
 		CollectionID: testCollID,
 	})
 	assert.NoError(t, err)
@@ -70,7 +73,7 @@ func Test_Integration(t *testing.T) {
 	assert.NotEmpty(t, collRes.Collection.Title)
 
 	t.Logf("Retrieving collection games...")
-	collGamesRes, err := c.GetCollectionGames(GetCollectionGamesParams{
+	collGamesRes, err := c.GetCollectionGames(ctx, GetCollectionGamesParams{
 		CollectionID: testCollID,
 		Page:         0,
 	})
@@ -78,7 +81,7 @@ func Test_Integration(t *testing.T) {
 	assert.NotEmpty(t, collGamesRes.CollectionGames)
 
 	t.Logf("Retrieving game...")
-	g, err := c.GetGame(GetGameParams{
+	g, err := c.GetGame(ctx, GetGameParams{
 		GameID: testGameID,
 	})
 	assert.NoError(t, err)
@@ -88,7 +91,7 @@ func Test_Integration(t *testing.T) {
 	assert.EqualValues(t, "", g.Game.Platforms.Linux)
 
 	t.Logf("Listing uploads...")
-	lu, err := c.ListGameUploads(ListGameUploadsParams{
+	lu, err := c.ListGameUploads(ctx, ListGameUploadsParams{
 		GameID: testGameID,
 	})
 	assert.NoError(t, err)
@@ -97,7 +100,7 @@ func Test_Integration(t *testing.T) {
 	up := lu.Uploads[0]
 	assert.EqualValues(t, ArchitecturesAll, up.Platforms.Windows)
 	t.Logf("Listing builds for upload %d...", up.ID)
-	lb, err := c.ListUploadBuilds(ListUploadBuildsParams{
+	lb, err := c.ListUploadBuilds(ctx, ListUploadBuildsParams{
 		UploadID: up.ID,
 	})
 	assert.NoError(t, err)
@@ -130,7 +133,7 @@ func Test_Integration(t *testing.T) {
 	assert.EqualValues(t, up.Size, len(buildBytes))
 
 	t.Logf("Listing build files for build %d", b.ID)
-	bf, err := c.ListBuildFiles(b.ID)
+	bf, err := c.ListBuildFiles(ctx, b.ID)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, bf.Files)
 
@@ -156,7 +159,7 @@ func Test_Integration(t *testing.T) {
 	t.Logf("Looking for upgrade paths")
 	var oldBuild int64 = 64011
 	var newBuild int64 = 64020
-	pathRes, err := c.GetBuildUpgradePath(GetBuildUpgradePathParams{
+	pathRes, err := c.GetBuildUpgradePath(ctx, GetBuildUpgradePathParams{
 		CurrentBuildID: oldBuild,
 		TargetBuildID:  newBuild,
 	})

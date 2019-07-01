@@ -1,5 +1,7 @@
 package itchio
 
+import "context"
+
 // GetUserParams : params for GetUser
 type GetUserParams struct {
 	UserID int64
@@ -11,8 +13,8 @@ type GetUserResponse struct {
 }
 
 // GetUser retrieves info about a single user, by ID.
-func (c *Client) GetUser(p GetUserParams) (*GetUserResponse, error) {
+func (c *Client) GetUser(ctx context.Context, p GetUserParams) (*GetUserResponse, error) {
 	q := NewQuery(c, "/users/%d", p.UserID)
 	r := &GetUserResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }

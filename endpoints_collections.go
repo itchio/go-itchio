@@ -1,5 +1,7 @@
 package itchio
 
+import "context"
+
 //-------------------------------------------------------
 
 // GetCollectionParams : params for GetCollection
@@ -13,10 +15,10 @@ type GetCollectionResponse struct {
 }
 
 // GetCollection retrieves a single collection by ID.
-func (c *Client) GetCollection(params GetCollectionParams) (*GetCollectionResponse, error) {
+func (c *Client) GetCollection(ctx context.Context, params GetCollectionParams) (*GetCollectionResponse, error) {
 	q := NewQuery(c, "/collections/%d", params.CollectionID)
 	r := &GetCollectionResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -35,9 +37,9 @@ type GetCollectionGamesResponse struct {
 }
 
 // GetCollectionGames retrieves a page of a collection's games.
-func (c *Client) GetCollectionGames(params GetCollectionGamesParams) (*GetCollectionGamesResponse, error) {
+func (c *Client) GetCollectionGames(ctx context.Context, params GetCollectionGamesParams) (*GetCollectionGamesResponse, error) {
 	q := NewQuery(c, "/collections/%d/collection-games", params.CollectionID)
 	q.AddInt64IfNonZero("page", params.Page)
 	r := &GetCollectionGamesResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }

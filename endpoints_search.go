@@ -1,5 +1,7 @@
 package itchio
 
+import "context"
+
 // SearchGamesParams : params for SearchGames
 type SearchGamesParams struct {
 	Query string
@@ -16,12 +18,12 @@ type SearchGamesResponse struct {
 // SearchGames performs a text search for games (or any project type).
 // The games must be published, and not deindexed. There are a bunch
 // of subtleties about visibility and ranking, but that's internal.
-func (c *Client) SearchGames(params SearchGamesParams) (*SearchGamesResponse, error) {
+func (c *Client) SearchGames(ctx context.Context, params SearchGamesParams) (*SearchGamesResponse, error) {
 	q := NewQuery(c, "/search/games")
 	q.AddString("query", params.Query)
 	q.AddInt64IfNonZero("page", params.Page)
 	r := &SearchGamesResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
 
 //-------------------------------------------------------
@@ -40,10 +42,10 @@ type SearchUsersResponse struct {
 }
 
 // SearchUsers performs a text search for users.
-func (c *Client) SearchUsers(params SearchUsersParams) (*SearchUsersResponse, error) {
+func (c *Client) SearchUsers(ctx context.Context, params SearchUsersParams) (*SearchUsersResponse, error) {
 	q := NewQuery(c, "/search/users")
 	q.AddString("query", params.Query)
 	q.AddInt64IfNonZero("page", params.Page)
 	r := &SearchUsersResponse{}
-	return r, q.Get(r)
+	return r, q.Get(ctx, r)
 }
