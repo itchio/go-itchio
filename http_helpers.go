@@ -216,6 +216,10 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 		return errors.New(msg)
 	}
 
+	if res.StatusCode != 200 {
+		return errors.Errorf("HTTP %v", res.StatusCode)
+	}
+
 	return nil
 }
 
