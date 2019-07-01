@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,7 +17,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-var dumpAPICalls = os.Getenv("GO_ITCHIO_DEBUG") == "1"
+func getDebugLevel() int64 {
+	val, err := strconv.ParseInt(os.Getenv("GO_ITCHIO_DEBUG"), 10, 64)
+	if err != nil {
+		return 0
+	}
+	return val
+}
+
+var (
+	debugLevel   = getDebugLevel()
+	logRequests  = debugLevel >= 1
+	dumpAPICalls = debugLevel >= 2
+)
 
 // Get performs an HTTP GET request to the API
 func (c *Client) Get(url string) (*http.Response, error) {
@@ -79,8 +92,11 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
+	if logRequests {
+		fmt.Fprintf(os.Stderr, "%s %s [request]\n", req.Method, req.URL)
+	}
+
 	if dumpAPICalls {
-		fmt.Fprintf(os.Stderr, "[request] %s %s\n", req.Method, req.URL)
 		for k, vv := range req.Header {
 			for _, v := range vv {
 				fmt.Fprintf(os.Stderr, "[request] %s: %s\n", k, v)
@@ -101,10 +117,18 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		if res.StatusCode == 503 {
+			res.Body.Close()
+
 			// Rate limited, try again according to patterns.
 			// following https://cloud.google.com/storage/docs/json_api/v1/how-tos/upload#exp-backoff to the letter
-			res.Body.Close()
-			time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
+			actualSleepTime := sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond
+			if c.onRateLimited != nil {
+				c.onRateLimited(req, res)
+			}
+			if logRequests {
+				fmt.Fprintf(os.Stderr, "%s %s [rate limited, sleeping %v]\n", req.Method, req.URL, actualSleepTime)
+			}
+			time.Sleep(actualSleepTime)
 			continue
 		}
 

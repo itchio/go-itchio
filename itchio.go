@@ -8,6 +8,8 @@ import (
 	"github.com/itchio/httpkit/timeout"
 )
 
+type OnRateLimited func(req *http.Request, res *http.Response)
+
 // A Client allows consuming the itch.io API
 type Client struct {
 	Key              string
@@ -17,6 +19,8 @@ type Client struct {
 	UserAgent        string
 	AcceptedLanguage string
 	Limiter          rate.Limiter
+
+	onRateLimited OnRateLimited
 }
 
 func defaultRetryPatterns() []time.Duration {
@@ -41,6 +45,10 @@ func ClientWithKey(key string) *Client {
 	}
 	c.SetServer("https://api.itch.io")
 	return c
+}
+
+func (c *Client) OnRateLimited(cb OnRateLimited) {
+	c.onRateLimited = cb
 }
 
 // SetServer allows changing the server to which we're making API
