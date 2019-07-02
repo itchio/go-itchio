@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/itchio/wharf/wtest"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/stretchr/testify/assert"
@@ -94,7 +93,7 @@ func Test_GameHookNested(t *testing.T) {
 
 	intermediate := make(map[string]interface{})
 	err := json.Unmarshal(marshalledSane, &intermediate)
-	wtest.Must(t, err)
+	tmust(t, err)
 
 	var res Res
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
@@ -105,10 +104,10 @@ func Test_GameHookNested(t *testing.T) {
 		),
 		WeaklyTypedInput: true,
 	})
-	wtest.Must(t, err)
+	tmust(t, err)
 
 	err = dec.Decode(intermediate)
-	wtest.Must(t, err)
+	tmust(t, err)
 
 	assert.EqualValues(t, Res{
 		Games: []*Game{
@@ -122,4 +121,14 @@ func Test_GameHookNested(t *testing.T) {
 			},
 		},
 	}, res)
+}
+
+// tmust shows a complete error stack and fails a test immediately
+// if err is non-nil
+func tmust(t *testing.T, err error) {
+	if err != nil {
+		t.Helper()
+		t.Errorf("%+v", err)
+		t.FailNow()
+	}
 }
