@@ -7,7 +7,7 @@ import (
 
 	itchio "github.com/itchio/go-itchio"
 	"github.com/itchio/httpkit/htfs"
-	"github.com/itchio/eos"
+	"github.com/itchio/httpkit/eos"
 )
 
 // ItchFS is an eos handler for itch.io uploads and builds

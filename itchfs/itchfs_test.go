@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/itchio/eos"
+	"github.com/itchio/httpkit/eos"
 	"github.com/stretchr/testify/assert"
 )
 
