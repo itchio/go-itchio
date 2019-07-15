@@ -109,7 +109,13 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	retryPatterns := append(c.RetryPatterns, time.Millisecond)
 
 	for _, sleepTime := range retryPatterns {
-		c.Limiter.Wait(req.Context())
+		r := c.Limiter.Reserve()
+		if !r.OK() {
+			return nil, errors.Errorf("invalid rate limiter settings")
+		}
+		limitDelay := r.Delay()
+		time.Sleep(limitDelay)
+
 		if c.onOutgoingRequest != nil {
 			c.onOutgoingRequest(req)
 		}
