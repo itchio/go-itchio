@@ -86,7 +86,6 @@ func (c *Client) PostFormResponse(ctx context.Context, url string, data url.Valu
 // Do performs a request (any method). It takes care of JWT or API key
 // authentication, sets the proper user agent, has built-in retry,
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	c.Limiter.Wait(req.Context())
 	req.Header.Add("Authorization", c.Key)
 	req.Header.Set("User-Agent", c.UserAgent)
 	req.Header.Set("Accept-Language", c.AcceptedLanguage)
@@ -110,6 +109,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	retryPatterns := append(c.RetryPatterns, time.Millisecond)
 
 	for _, sleepTime := range retryPatterns {
+		c.Limiter.Wait(req.Context())
 		if c.onOutgoingRequest != nil {
 			c.onOutgoingRequest(req)
 		}
