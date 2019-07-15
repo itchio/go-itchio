@@ -11,6 +11,9 @@ import (
 // OnRateLimited is the callback type for rate limiting events
 type OnRateLimited func(req *http.Request, res *http.Response)
 
+// OnRateLimited is the callback type for rate limiting events
+type OnOutgoingRequest func(req *http.Request)
+
 // A Client allows consuming the itch.io API
 type Client struct {
 	Key              string
@@ -21,7 +24,8 @@ type Client struct {
 	AcceptedLanguage string
 	Limiter          *rate.Limiter
 
-	onRateLimited OnRateLimited
+	onRateLimited     OnRateLimited
+	onOutgoingRequest OnOutgoingRequest
 }
 
 func defaultRetryPatterns() []time.Duration {
@@ -52,6 +56,12 @@ func ClientWithKey(key string) *Client {
 // every time the server responds with 503
 func (c *Client) OnRateLimited(cb OnRateLimited) {
 	c.onRateLimited = cb
+}
+
+// OnOutgoingRequest allows registering a function that gets called
+// every time the client makes an HTTP request
+func (c *Client) OnOutgoingRequest(cb OnOutgoingRequest) {
+	c.onOutgoingRequest = cb
 }
 
 // SetServer allows changing the server to which we're making API

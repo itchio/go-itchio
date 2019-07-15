@@ -110,6 +110,9 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	retryPatterns := append(c.RetryPatterns, time.Millisecond)
 
 	for _, sleepTime := range retryPatterns {
+		if c.onOutgoingRequest != nil {
+			c.onOutgoingRequest(req)
+		}
 		res, err = c.HTTPClient.Do(req)
 		if err != nil {
 			if strings.Contains(err.Error(), "TLS handshake timeout") {
