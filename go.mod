@@ -3,10 +3,10 @@ module github.com/itchio/go-itchio
 go 1.12
 
 require (
-	github.com/itchio/httpkit v0.0.0-20200228192911-d307914d3efe
+	github.com/itchio/headway v0.0.0-20200301160421-e15721f23905 // indirect
+	github.com/itchio/httpkit v0.0.0-20200301151414-2207154e44d1
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.3.1-0.20190311161405-34c6fa2dc709
-	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	github.com/stretchr/testify v1.5.1
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 )
