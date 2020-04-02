@@ -228,7 +228,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	if dumpAPICalls {
 		enc := json.NewEncoder(os.Stderr)
 		enc.SetIndent("[intermediate] ", "  ")
-		enc.Encode(intermediate)
+		_ = enc.Encode(intermediate)
 	}
 
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{

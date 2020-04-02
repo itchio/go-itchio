@@ -1,6 +1,9 @@
 package itchio
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 // GameCredentials is your one-stop shop for all the
 // things that allow access to a game or its uploads, such as:
@@ -212,4 +215,52 @@ func (c *Client) MakeBuildDownloadURL(p MakeBuildDownloadURLParams) string {
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
 	return q.URL()
+}
+
+type GetUploadScannedArchiveParams struct {
+	UploadID int64
+
+	// Optional
+	Credentials GameCredentials
+}
+
+type GetBuildScannedArchiveParams struct {
+	BuildID int64
+
+	// Optional
+	Credentials GameCredentials
+}
+
+type GetScannedArchiveResponse struct {
+	ScannedArchive ScannedArchive `json:"scannedArchive"`
+}
+
+type ScannedArchive struct {
+	ObjectID   int64
+	ObjectType ScannedArchiveObjectType
+
+	ExtractedSize int64
+	LaunchTargets *json.RawMessage
+	Manifest      *json.RawMessage
+}
+
+type ScannedArchiveObjectType = string
+
+const (
+	ScannedArchiveObjectTypeUpload ScannedArchiveObjectType = "upload"
+	ScannedArchiveObjectTypeBuild  ScannedArchiveObjectType = "build"
+)
+
+func (c *Client) GetUploadScannedArchive(ctx context.Context, p GetUploadScannedArchiveParams) (*GetScannedArchiveResponse, error) {
+	q := NewQuery(c, "/uploads/%d/scanned-archive", p.UploadID)
+	q.AddGameCredentials(p.Credentials)
+	r := &GetScannedArchiveResponse{}
+	return r, q.Get(ctx, r)
+}
+
+func (c *Client) GetBuildScannedArchive(ctx context.Context, p GetBuildScannedArchiveParams) (*GetScannedArchiveResponse, error) {
+	q := NewQuery(c, "/builds/%d/scanned-archive", p.BuildID)
+	q.AddGameCredentials(p.Credentials)
+	r := &GetScannedArchiveResponse{}
+	return r, q.Get(ctx, r)
 }
