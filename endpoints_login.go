@@ -9,6 +9,7 @@ type LoginWithPasswordParams struct {
 	Username          string
 	Password          string
 	RecaptchaResponse string
+	ForceRecaptcha    bool
 }
 
 // Cookie represents, well, multiple key=value pairs that
@@ -37,6 +38,7 @@ func (c *Client) LoginWithPassword(ctx context.Context, params LoginWithPassword
 	q.AddString("username", params.Username)
 	q.AddString("password", params.Password)
 	q.AddStringIfNonEmpty("recaptcha_response", params.RecaptchaResponse)
+	q.AddBoolIfTrue("force_recaptcha", params.ForceRecaptcha)
 
 	r := &LoginWithPasswordResponse{}
 	return r, q.Post(ctx, r)
