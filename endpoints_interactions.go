@@ -30,13 +30,6 @@ type UserGameSession struct {
 // endpoints
 /////////////////////////////
 
-// GetUserGameSessionsParams : params for GetUserGameSessions
-type GetUserGameSessionsParams struct {
-	GameID int64
-
-	Credentials GameCredentials
-}
-
 type SessionPlatform string
 
 const (
