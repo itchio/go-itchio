@@ -71,6 +71,35 @@ func (c *Client) TOTPVerify(ctx context.Context, params TOTPVerifyParams) (*TOTP
 
 //-------------------------------------------------------
 
+// ExchangeOAuthCodeParams : params for ExchangeOAuthCode
+type ExchangeOAuthCodeParams struct {
+	Code         string
+	CodeVerifier string
+	RedirectURI  string
+}
+
+// ExchangeOAuthCodeResponse : response for ExchangeOAuthCode
+type ExchangeOAuthCodeResponse struct {
+	Key    *APIKey `json:"key"`
+	Cookie Cookie  `json:"cookie"`
+}
+
+// ExchangeOAuthCode exchanges an OAuth authorization code (with PKCE) for an API key.
+// Used by the desktop app's OAuth login flow.
+func (c *Client) ExchangeOAuthCode(ctx context.Context, params ExchangeOAuthCodeParams) (*ExchangeOAuthCodeResponse, error) {
+	q := NewQuery(c, "/oauth/token")
+	q.AddString("grant_type", "authorization_code")
+	q.AddString("code", params.Code)
+	q.AddString("code_verifier", params.CodeVerifier)
+	q.AddString("redirect_uri", params.RedirectURI)
+	q.AddString("client_id", "butler")
+
+	r := &ExchangeOAuthCodeResponse{}
+	return r, q.Post(ctx, r)
+}
+
+//-------------------------------------------------------
+
 // SubkeyParams : params for Subkey
 type SubkeyParams struct {
 	GameID int64

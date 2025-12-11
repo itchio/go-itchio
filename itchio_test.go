@@ -67,6 +67,40 @@ func Test_ListProfileGamesError(t *testing.T) {
 	assert.EqualValues(t, "itch.io API error (400): /profile/games: invalid game", err.Error())
 }
 
+func Test_ExchangeOAuthCode(t *testing.T) {
+	server, client := testTools(200, `{
+		"key": {"id": 123, "userId": 456, "key": "abc123"},
+		"cookie": {"itchio_token": "xyz789"}
+	}`)
+	defer server.Close()
+
+	resp, err := client.ExchangeOAuthCode(context.Background(), ExchangeOAuthCodeParams{
+		Code:         "auth_code_123",
+		CodeVerifier: "verifier_abc",
+		RedirectURI:  "http://localhost:8080/callback",
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, resp.Key)
+	assert.EqualValues(t, 123, resp.Key.ID)
+	assert.EqualValues(t, "abc123", resp.Key.Key)
+	assert.EqualValues(t, "xyz789", resp.Cookie["itchioToken"])
+}
+
+func Test_ExchangeOAuthCodeError(t *testing.T) {
+	server, client := testTools(400, `{
+		"errors": ["invalid_grant"]
+	}`)
+	defer server.Close()
+
+	_, err := client.ExchangeOAuthCode(context.Background(), ExchangeOAuthCodeParams{
+		Code:         "invalid_code",
+		CodeVerifier: "verifier",
+		RedirectURI:  "http://localhost:8080/callback",
+	})
+	assert.Error(t, err)
+	assert.True(t, IsAPIError(err))
+}
+
 func Test_ParseSpec(t *testing.T) {
 	var spec *Spec
 	var err error
