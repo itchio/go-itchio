@@ -26,6 +26,9 @@ type Client struct {
 
 	onRateLimited     OnRateLimited
 	onOutgoingRequest OnOutgoingRequest
+
+	// OAuth state (nil for API key auth)
+	oauth *oauthState
 }
 
 func defaultRetryPatterns() []time.Duration {

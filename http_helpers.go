@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -59,12 +60,17 @@ func (c *Client) GetResponse(ctx context.Context, url string, dst interface{}) e
 
 // PostForm performs an HTTP POST request to the API, with url-encoded parameters
 func (c *Client) PostForm(ctx context.Context, url string, data url.Values) (*http.Response, error) {
-	req, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
+	encoded := data.Encode()
+	req, err := http.NewRequest("POST", url, strings.NewReader(encoded))
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// Set GetBody so the request can be retried on 401 (OAuth token refresh)
+	req.GetBody = func() (io.ReadCloser, error) {
+		return io.NopCloser(strings.NewReader(encoded)), nil
+	}
 	return c.Do(req)
 }
 
@@ -86,7 +92,31 @@ func (c *Client) PostFormResponse(ctx context.Context, url string, data url.Valu
 // Do performs a request (any method). It takes care of JWT or API key
 // authentication, sets the proper user agent, has built-in retry,
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Add("Authorization", c.Key)
+	return c.doWithRetry(req, true)
+}
+
+// doWithRetry performs the request with optional 401 retry for OAuth clients
+func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Response, error) {
+	ctx := req.Context()
+
+	// Skip OAuth machinery for token refresh requests (prevents deadlock)
+	skipOAuth := shouldSkipOAuthRefresh(ctx)
+
+	// Proactive token refresh for OAuth clients (unless we're doing the refresh itself)
+	if c.isOAuthClient() && !skipOAuth {
+		if err := c.refreshTokenIfNeeded(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to refresh token")
+		}
+	}
+
+	// Use appropriate auth header:
+	// - For refresh requests: use API key (or empty) since refresh token is in body
+	// - For normal OAuth requests: use Bearer token
+	if skipOAuth {
+		req.Header.Set("Authorization", c.Key)
+	} else {
+		req.Header.Set("Authorization", c.getAuthHeader())
+	}
 	req.Header.Set("User-Agent", c.UserAgent)
 	req.Header.Set("Accept-Language", c.AcceptedLanguage)
 	req.Header.Set("Accept", "application/vnd.itch.v2")
@@ -145,6 +175,39 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		break
+	}
+
+	// Handle 401 for OAuth clients - attempt one token refresh and retry
+	if res != nil && res.StatusCode == 401 && c.isOAuthClient() && allow401Retry && !skipOAuth {
+		res.Body.Close()
+
+		if logRequests {
+			fmt.Fprintf(os.Stderr, "%s %s [401, attempting token refresh]\n", req.Method, req.URL)
+		}
+
+		if err := c.forceTokenRefresh(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to refresh token after 401")
+		}
+
+		// Recreate request body if needed for retry
+		if req.GetBody != nil {
+			newBody, err := req.GetBody()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get request body for retry")
+			}
+			req.Body = newBody
+		} else if req.ContentLength > 0 {
+			// Original request had a body but GetBody not set - can't retry safely
+			return nil, errors.New("cannot retry request: body was consumed and GetBody not available")
+		}
+		// ContentLength == 0 or -1 with no GetBody means no body or unknown,
+		// which is fine for GET/DELETE requests
+
+		// Update auth header with new token
+		req.Header.Set("Authorization", c.getAuthHeader())
+
+		// Retry once with new token (don't allow another 401 retry)
+		return c.doWithRetry(req, false)
 	}
 
 	return res, err

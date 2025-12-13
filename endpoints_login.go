@@ -83,6 +83,24 @@ type ExchangeOAuthCodeParams struct {
 type ExchangeOAuthCodeResponse struct {
 	Key    *APIKey `json:"key"`
 	Cookie Cookie  `json:"cookie"`
+
+	// OAuth token fields (for refresh token flow)
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"` // seconds until access token expires
+}
+
+// OAuthCredentials converts the response to OAuthCredentials for use with NewOAuthClient.
+// Returns nil if the response doesn't contain OAuth token fields.
+func (r *ExchangeOAuthCodeResponse) OAuthCredentials() *OAuthCredentials {
+	if r.AccessToken == "" {
+		return nil
+	}
+	return &OAuthCredentials{
+		AccessToken:  r.AccessToken,
+		RefreshToken: r.RefreshToken,
+		ExpiresAt:    expiresAtFromExpiresIn(r.ExpiresIn),
+	}
 }
 
 // ExchangeOAuthCode exchanges an OAuth authorization code (with PKCE) for an API key.
@@ -122,5 +140,32 @@ func (c *Client) Subkey(ctx context.Context, params SubkeyParams) (*SubkeyRespon
 	q.AddString("scope", params.Scope)
 
 	r := &SubkeyResponse{}
+	return r, q.Post(ctx, r)
+}
+
+//-------------------------------------------------------
+
+// RefreshOAuthTokenParams : params for RefreshOAuthToken
+type RefreshOAuthTokenParams struct {
+	RefreshToken string
+	ClientID     string
+}
+
+// RefreshOAuthTokenResponse : response for RefreshOAuthToken
+type RefreshOAuthTokenResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"` // May be rotated
+	ExpiresIn    int64  `json:"expiresIn"`    // seconds until access token expires
+}
+
+// RefreshOAuthToken exchanges a refresh token for a new access token.
+// This is called automatically by OAuth clients when tokens are near expiry.
+func (c *Client) RefreshOAuthToken(ctx context.Context, params RefreshOAuthTokenParams) (*RefreshOAuthTokenResponse, error) {
+	q := NewQuery(c, "/oauth/token")
+	q.AddString("grant_type", "refresh_token")
+	q.AddString("refresh_token", params.RefreshToken)
+	q.AddString("client_id", params.ClientID)
+
+	r := &RefreshOAuthTokenResponse{}
 	return r, q.Post(ctx, r)
 }
