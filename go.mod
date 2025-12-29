@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/itchio/headway v0.0.0-20200301160421-e15721f23905 // indirect
-	github.com/itchio/httpkit v0.0.0-20200301151414-2207154e44d1
+	github.com/itchio/httpkit v0.0.0-20251229210405-326eb03f8cf8
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.5.1

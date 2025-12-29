@@ -35,8 +35,8 @@ github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/me
 github.com/itchio/headway v0.0.0-20191015112415-46f64dd4d524/go.mod h1:Iif+7HeesRB0PvTYf0gOIFX8lj0za0SUsWryENQYt1E=
 github.com/itchio/headway v0.0.0-20200301160421-e15721f23905 h1:gXP9pux2xvSQ03umJX8wuek4VE6gHNgZtqDdCmJmRQc=
 github.com/itchio/headway v0.0.0-20200301160421-e15721f23905/go.mod h1:JpKeIqKW8xveb2juFrZ2kFR8GiMplC2H6bZ+UZHC/c0=
-github.com/itchio/httpkit v0.0.0-20200301151414-2207154e44d1 h1:C1HRom5DCRG024rjo3CXlcGRQkxW9Uhx5XMbxy8rL70=
-github.com/itchio/httpkit v0.0.0-20200301151414-2207154e44d1/go.mod h1:ttQmJg3MrzSL0TYYqececx1WLJWjUedAMWoJ0dUbbKA=
+github.com/itchio/httpkit v0.0.0-20251229210405-326eb03f8cf8 h1:k7Fty4eEIOUKZnlVAA7fJfg5Czh8gqcIr/zQ0RbdjpQ=
+github.com/itchio/httpkit v0.0.0-20251229210405-326eb03f8cf8/go.mod h1:ttQmJg3MrzSL0TYYqececx1WLJWjUedAMWoJ0dUbbKA=
 github.com/itchio/randsource v0.0.0-20190703104731-3f6d22f91927/go.mod h1:lKWkyaS6DHSVoxVLw7mIeD+po2Kvwv1Hiy8+7VR1zZc=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
