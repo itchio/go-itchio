@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,8 +16,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getlantern/idletiming"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 func getDebugLevel() int64 {
@@ -33,6 +35,21 @@ var (
 	dumpAPICalls = debugLevel >= 2
 )
 
+// isRetriableError checks if an error is a transient network error that should be retried
+func isRetriableError(err error) bool {
+	// Server closed idle connection before client did
+	if errors.Is(err, idletiming.ErrIdled) {
+		return true
+	}
+
+	// TLS handshake timeout (no exported error type)
+	if strings.Contains(err.Error(), "TLS handshake timeout") {
+		return true
+	}
+
+	return false
+}
+
 // Get performs an HTTP GET request to the API
 func (c *Client) Get(ctx context.Context, url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
@@ -47,12 +64,12 @@ func (c *Client) Get(ctx context.Context, url string) (*http.Response, error) {
 func (c *Client) GetResponse(ctx context.Context, url string, dst interface{}) error {
 	resp, err := c.Get(ctx, url)
 	if err != nil {
-		return errors.WithStack(err)
+		return pkgerrors.WithStack(err)
 	}
 
 	err = ParseAPIResponse(dst, resp)
 	if err != nil {
-		return errors.WithStack(err)
+		return pkgerrors.WithStack(err)
 	}
 
 	return nil
@@ -78,12 +95,12 @@ func (c *Client) PostForm(ctx context.Context, url string, data url.Values) (*ht
 func (c *Client) PostFormResponse(ctx context.Context, url string, data url.Values, dst interface{}) error {
 	resp, err := c.PostForm(ctx, url, data)
 	if err != nil {
-		return errors.WithStack(err)
+		return pkgerrors.WithStack(err)
 	}
 
 	err = ParseAPIResponse(dst, resp)
 	if err != nil {
-		return errors.WithStack(err)
+		return pkgerrors.WithStack(err)
 	}
 
 	return nil
@@ -105,7 +122,7 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 	// Proactive token refresh for OAuth clients (unless we're doing the refresh itself)
 	if c.isOAuthClient() && !skipOAuth {
 		if err := c.refreshTokenIfNeeded(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to refresh token")
+			return nil, pkgerrors.Wrap(err, "failed to refresh token")
 		}
 	}
 
@@ -141,7 +158,7 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 	for _, sleepTime := range retryPatterns {
 		r := c.Limiter.Reserve()
 		if !r.OK() {
-			return nil, errors.Errorf("invalid rate limiter settings")
+			return nil, pkgerrors.Errorf("invalid rate limiter settings")
 		}
 		limitDelay := r.Delay()
 		time.Sleep(limitDelay)
@@ -151,7 +168,7 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 		}
 		res, err = c.HTTPClient.Do(req)
 		if err != nil {
-			if strings.Contains(err.Error(), "TLS handshake timeout") {
+			if isRetriableError(err) {
 				time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
 				continue
 			}
@@ -186,14 +203,14 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 		}
 
 		if err := c.forceTokenRefresh(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to refresh token after 401")
+			return nil, pkgerrors.Wrap(err, "failed to refresh token after 401")
 		}
 
 		// Recreate request body if needed for retry
 		if req.GetBody != nil {
 			newBody, err := req.GetBody()
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to get request body for retry")
+				return nil, pkgerrors.Wrap(err, "failed to get request body for retry")
 			}
 			req.Body = newBody
 		} else if req.ContentLength > 0 {
@@ -249,7 +266,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 
 	body, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return errors.WithStack(err)
+		return pkgerrors.WithStack(err)
 	}
 
 	if dumpAPICalls {
@@ -306,7 +323,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 		),
 	})
 	if err != nil {
-		return errors.WithStack(err)
+		return pkgerrors.WithStack(err)
 	}
 
 	err = decoder.Decode(intermediate)
@@ -316,7 +333,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	}
 
 	if res.StatusCode != 200 {
-		return errors.Errorf("HTTP %v", res.StatusCode)
+		return pkgerrors.Errorf("HTTP %v", res.StatusCode)
 	}
 
 	return nil
