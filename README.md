@@ -66,6 +66,20 @@ GO_ITCHIO_DEBUG=1 ./your-app
 GO_ITCHIO_DEBUG=2 ./your-app
 ```
 
+### Programmatic Logging with slog
+
+You can attach a `slog` logger to emit structured per-attempt HTTP logs. These logs are emitted at `DEBUG` level:
+
+```go
+logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+    Level: slog.LevelDebug,
+}))
+client := itchio.ClientWithKey("your-api-key")
+client.Logger = logger
+```
+
+Each log entry includes fields like `method`, `url` (with sensitive query values redacted), `status_code`, `duration_ms`, `attempt`, `retrying`, and `retry_reason`.
+
 ## License
 
 Licensed under MIT License, see `LICENSE` for details.

@@ -35,6 +35,16 @@ var (
 	dumpAPICalls = debugLevel >= 2
 )
 
+var sensitiveLogQueryKeys = map[string]struct{}{
+	"api_key":       {},
+	"password":      {},
+	"secret":        {},
+	"refresh_token": {},
+	"code":          {},
+	"code_verifier": {},
+	"token":         {},
+}
+
 // isRetriableError checks if an error is a transient network error that should be retried
 func isRetriableError(err error) bool {
 	// Server closed idle connection before client did
@@ -48,6 +58,54 @@ func isRetriableError(err error) bool {
 	}
 
 	return false
+}
+
+func sanitizeURLForLog(u *url.URL) string {
+	if u == nil {
+		return ""
+	}
+
+	sanitized := *u
+	values := sanitized.Query()
+	for key, vv := range values {
+		if _, ok := sensitiveLogQueryKeys[strings.ToLower(key)]; !ok {
+			continue
+		}
+		for i := range vv {
+			vv[i] = "REDACTED"
+		}
+		values[key] = vv
+	}
+	sanitized.RawQuery = values.Encode()
+	return sanitized.String()
+}
+
+func (c *Client) logHTTPAttempt(ctx context.Context, req *http.Request, res *http.Response, err error, duration time.Duration, attempt int, retrying bool, retryReason string) {
+	if c.Logger == nil || req == nil {
+		return
+	}
+
+	statusCode := 0
+	if res != nil {
+		statusCode = res.StatusCode
+	}
+
+	args := []any{
+		"method", req.Method,
+		"url", sanitizeURLForLog(req.URL),
+		"status_code", statusCode,
+		"duration_ms", duration.Milliseconds(),
+		"attempt", attempt,
+		"retrying", retrying,
+	}
+	if retryReason != "" {
+		args = append(args, "retry_reason", retryReason)
+	}
+	if err != nil {
+		args = append(args, "error", err.Error())
+	}
+
+	c.Logger.DebugContext(ctx, "http request", args...)
 }
 
 // Get performs an HTTP GET request to the API
@@ -114,6 +172,12 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 // doWithRetry performs the request with optional 401 retry for OAuth clients
 func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Response, error) {
+	return c.doWithRetryWithAttempt(req, allow401Retry, 0)
+}
+
+// doWithRetryWithAttempt performs the request with optional 401 retry for OAuth clients,
+// tracking an offset for nested retry flows (OAuth 401 refresh retry).
+func (c *Client) doWithRetryWithAttempt(req *http.Request, allow401Retry bool, attemptOffset int) (*http.Response, error) {
 	ctx := req.Context()
 
 	// Skip OAuth machinery for token refresh requests (prevents deadlock)
@@ -154,8 +218,12 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 	}
 
 	retryPatterns := append(c.RetryPatterns, time.Millisecond)
+	attempt := attemptOffset
 
-	for _, sleepTime := range retryPatterns {
+	for i, sleepTime := range retryPatterns {
+		lastAttempt := i == len(retryPatterns)-1
+		attempt++
+
 		r := c.Limiter.Reserve()
 		if !r.OK() {
 			return nil, pkgerrors.Errorf("invalid rate limiter settings")
@@ -166,16 +234,34 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 		if c.onOutgoingRequest != nil {
 			c.onOutgoingRequest(req)
 		}
+
+		attemptStart := time.Now()
 		res, err = c.HTTPClient.Do(req)
+		attemptDuration := time.Since(attemptStart)
+
 		if err != nil {
 			if isRetriableError(err) {
+				retrying := !lastAttempt
+				retryReason := ""
+				if retrying {
+					retryReason = "transient_error"
+				}
+				c.logHTTPAttempt(ctx, req, nil, err, attemptDuration, attempt, retrying, retryReason)
 				time.Sleep(sleepTime + time.Duration(rand.Int()%1000)*time.Millisecond)
 				continue
 			}
+
+			c.logHTTPAttempt(ctx, req, nil, err, attemptDuration, attempt, false, "")
 			return nil, err
 		}
 
 		if res.StatusCode == 503 {
+			retrying := !lastAttempt
+			retryReason := ""
+			if retrying {
+				retryReason = "rate_limited_503"
+			}
+			c.logHTTPAttempt(ctx, req, res, nil, attemptDuration, attempt, retrying, retryReason)
 			res.Body.Close()
 
 			// Rate limited, try again according to patterns.
@@ -191,40 +277,42 @@ func (c *Client) doWithRetry(req *http.Request, allow401Retry bool) (*http.Respo
 			continue
 		}
 
-		break
-	}
+		// Handle 401 for OAuth clients - attempt one token refresh and retry
+		if res.StatusCode == 401 && c.isOAuthClient() && allow401Retry && !skipOAuth {
+			c.logHTTPAttempt(ctx, req, res, nil, attemptDuration, attempt, true, "oauth_401_refresh")
+			res.Body.Close()
 
-	// Handle 401 for OAuth clients - attempt one token refresh and retry
-	if res != nil && res.StatusCode == 401 && c.isOAuthClient() && allow401Retry && !skipOAuth {
-		res.Body.Close()
-
-		if logRequests {
-			fmt.Fprintf(os.Stderr, "%s %s [401, attempting token refresh]\n", req.Method, req.URL)
-		}
-
-		if err := c.forceTokenRefresh(ctx); err != nil {
-			return nil, pkgerrors.Wrap(err, "failed to refresh token after 401")
-		}
-
-		// Recreate request body if needed for retry
-		if req.GetBody != nil {
-			newBody, err := req.GetBody()
-			if err != nil {
-				return nil, pkgerrors.Wrap(err, "failed to get request body for retry")
+			if logRequests {
+				fmt.Fprintf(os.Stderr, "%s %s [401, attempting token refresh]\n", req.Method, req.URL)
 			}
-			req.Body = newBody
-		} else if req.ContentLength > 0 {
-			// Original request had a body but GetBody not set - can't retry safely
-			return nil, errors.New("cannot retry request: body was consumed and GetBody not available")
+
+			if err := c.forceTokenRefresh(ctx); err != nil {
+				return nil, pkgerrors.Wrap(err, "failed to refresh token after 401")
+			}
+
+			// Recreate request body if needed for retry
+			if req.GetBody != nil {
+				newBody, err := req.GetBody()
+				if err != nil {
+					return nil, pkgerrors.Wrap(err, "failed to get request body for retry")
+				}
+				req.Body = newBody
+			} else if req.ContentLength > 0 {
+				// Original request had a body but GetBody not set - can't retry safely
+				return nil, errors.New("cannot retry request: body was consumed and GetBody not available")
+			}
+			// ContentLength == 0 or -1 with no GetBody means no body or unknown,
+			// which is fine for GET/DELETE requests
+
+			// Update auth header with new token
+			req.Header.Set("Authorization", c.getAuthHeader())
+
+			// Retry once with new token (don't allow another 401 retry)
+			return c.doWithRetryWithAttempt(req, false, attempt)
 		}
-		// ContentLength == 0 or -1 with no GetBody means no body or unknown,
-		// which is fine for GET/DELETE requests
 
-		// Update auth header with new token
-		req.Header.Set("Authorization", c.getAuthHeader())
-
-		// Retry once with new token (don't allow another 401 retry)
-		return c.doWithRetry(req, false)
+		c.logHTTPAttempt(ctx, req, res, nil, attemptDuration, attempt, false, "")
+		break
 	}
 
 	return res, err

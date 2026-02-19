@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,6 +23,7 @@ type Client struct {
 	RetryPatterns    []time.Duration
 	UserAgent        string
 	AcceptedLanguage string
+	Logger           *slog.Logger
 	Limiter          *rate.Limiter
 
 	onRateLimited     OnRateLimited
