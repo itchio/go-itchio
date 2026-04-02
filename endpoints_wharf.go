@@ -71,6 +71,7 @@ type CreateBuildParams struct {
 	Target      string
 	Channel     string
 	UserVersion string
+	Hidden      bool
 }
 
 // CreateBuildResponse : response for CreateBuild
@@ -91,6 +92,7 @@ func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateB
 	q.AddString("target", p.Target)
 	q.AddString("channel", p.Channel)
 	q.AddStringIfNonEmpty("user_version", p.UserVersion)
+	q.AddBoolIfTrue("hidden", p.Hidden)
 	r := &CreateBuildResponse{}
 	return r, q.Post(ctx, r)
 }
