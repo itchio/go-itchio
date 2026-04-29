@@ -67,3 +67,42 @@ func (c *Client) ListProfileCollections(ctx context.Context) (*ListProfileCollec
 	r := &ListProfileCollectionsResponse{}
 	return r, q.Get(ctx, r)
 }
+
+//-------------------------------------------------------
+
+// ProfileBuildsTotals : per-state counts and project count for the current page set
+type ProfileBuildsTotals struct {
+	All          int64 `json:"all"`
+	Live         int64 `json:"live"`
+	Processing   int64 `json:"processing"`
+	Failed       int64 `json:"failed"`
+	ProjectCount int64 `json:"projectCount"`
+}
+
+// ListProfileBuildsParams : params for ListProfileBuilds
+type ListProfileBuildsParams struct {
+	Page    int64
+	PerPage int64
+	// Optional. One of "live", "processing", "failed". Empty for all.
+	State string
+}
+
+// ListProfileBuildsResponse : response for ListProfileBuilds
+type ListProfileBuildsResponse struct {
+	Builds  []*Build            `json:"builds"`
+	Page    int64               `json:"page"`
+	PerPage int64               `json:"perPage"`
+	Totals  ProfileBuildsTotals `json:"totals"`
+}
+
+// ListProfileBuilds lists builds across all games the current user develops.
+// Each build includes nested game and upload context so the client can render
+// per-row metadata without further round-trips.
+func (c *Client) ListProfileBuilds(ctx context.Context, p ListProfileBuildsParams) (*ListProfileBuildsResponse, error) {
+	q := NewQuery(c, "/profile/builds")
+	q.AddInt64IfNonZero("page", p.Page)
+	q.AddInt64IfNonZero("per_page", p.PerPage)
+	q.AddStringIfNonEmpty("state", p.State)
+	r := &ListProfileBuildsResponse{}
+	return r, q.Get(ctx, r)
+}

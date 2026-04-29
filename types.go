@@ -359,11 +359,22 @@ type Build struct {
 	// State of the build: started, processing, etc.
 	State BuildState `json:"state"`
 
+	// Upload this build belongs to
+	UploadID int64 `json:"uploadId"`
+	// Game this build belongs to
+	GameID int64 `json:"gameId"`
+	// User who pushed the build
+	UserID int64 `json:"userId"`
+
 	// Automatically-incremented version number, starting with 1
 	Version int64 `json:"version"`
 	// Value specified by developer with `--userversion` when pushing a build
 	// Might not be unique across builds of a given channel.
 	UserVersion string `json:"userVersion"`
+
+	// Size of the default archive build file, in bytes. Only populated by
+	// endpoints that opt into emitting it (eg. `/profile/builds`).
+	ArchiveSize int64 `json:"archiveSize,omitempty"`
 
 	// Files associated with this build - often at least an archive,
 	// a signature, and a patch. Some might be missing while the build
@@ -372,6 +383,10 @@ type Build struct {
 
 	// User who pushed the build
 	User *User `json:"user"`
+	// Upload this build belongs to (only populated by endpoints that nest it)
+	Upload *Upload `json:"upload,omitempty"`
+	// Game this build belongs to (only populated by endpoints that nest it)
+	Game *Game `json:"game,omitempty"`
 	// Timestamp the build was created at
 	CreatedAt *time.Time `json:"createdAt"`
 	// Timestamp the build was last updated at
