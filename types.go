@@ -372,10 +372,6 @@ type Build struct {
 	// Might not be unique across builds of a given channel.
 	UserVersion string `json:"userVersion"`
 
-	// Size of the default archive build file, in bytes. Only populated by
-	// endpoints that opt into emitting it (eg. `/profile/builds`).
-	ArchiveSize int64 `json:"archiveSize,omitempty"`
-
 	// Files associated with this build - often at least an archive,
 	// a signature, and a patch. Some might be missing while the build
 	// is still processing or if processing has failed.
