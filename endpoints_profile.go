@@ -85,14 +85,16 @@ type ListProfileBuildsParams struct {
 	PerPage int64
 	// Optional. One of "live", "processing", "failed". Empty for all.
 	State string
+	// Optional. If set, include aggregate totals in the response.
+	IncludeTotals bool
 }
 
 // ListProfileBuildsResponse : response for ListProfileBuilds
 type ListProfileBuildsResponse struct {
-	Builds  []*Build            `json:"builds"`
-	Page    int64               `json:"page"`
-	PerPage int64               `json:"perPage"`
-	Totals  ProfileBuildsTotals `json:"totals"`
+	Builds  []*Build             `json:"builds"`
+	Page    int64                `json:"page"`
+	PerPage int64                `json:"perPage"`
+	Totals  *ProfileBuildsTotals `json:"totals,omitempty"`
 }
 
 // ListProfileBuilds lists builds across all games the current user develops.
@@ -103,6 +105,9 @@ func (c *Client) ListProfileBuilds(ctx context.Context, p ListProfileBuildsParam
 	q.AddInt64IfNonZero("page", p.Page)
 	q.AddInt64IfNonZero("per_page", p.PerPage)
 	q.AddStringIfNonEmpty("state", p.State)
+	if p.IncludeTotals {
+		q.AddStringIfNonEmpty("include_totals", "1")
+	}
 	r := &ListProfileBuildsResponse{}
 	return r, q.Get(ctx, r)
 }
