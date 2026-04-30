@@ -54,6 +54,19 @@ games, err := client.ListProfileGames(ctx)
 
 The OAuth client automatically refreshes tokens before they expire and retries requests on 401 responses.
 
+## Response decoding
+
+The itch.io API returns JSON with `snake_case` keys, but Go response types in this package use `camelCase` `json` struct tags (e.g. `json:"coverUrl"`, not `json:"cover_url"`). Decoding happens in two steps:
+
+1. The response body is decoded into a generic `map[string]interface{}`.
+2. Every key in that map is recursively rewritten from `snake_case` to `camelCase` by `camelifyMap` (see `camelify.go`), then `mapstructure` populates the target struct using the `json` tag.
+
+When defining new response types, write `json` tags in `camelCase` to match the post-remap keys.
+
+### `upload_headers` blacklist
+
+The remap walks into nested maps and arrays by default, which would also rewrite the keys of arbitrary HTTP header maps returned by the API. To preserve those headers verbatim, `upload_headers` is listed in `camelifyBlacklist` (`camelify.go`): the field name itself is still camelified to `uploadHeaders`, but its inner map keys are left untouched. Add to this blacklist if you introduce another field whose values are user-controlled key/value data rather than a known schema.
+
 ## Debugging
 
 Set `GO_ITCHIO_DEBUG` to enable request logging:
