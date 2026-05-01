@@ -72,6 +72,9 @@ type CreateBuildParams struct {
 	Channel     string
 	UserVersion string
 	Hidden      bool
+	// Source identifies the surface that initiated the push (e.g.
+	// "cli", "butlerd", "app"). Recorded by the API for analytics.
+	Source string
 }
 
 // CreateBuildResponse : response for CreateBuild
@@ -93,6 +96,7 @@ func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateB
 	q.AddString("channel", p.Channel)
 	q.AddStringIfNonEmpty("user_version", p.UserVersion)
 	q.AddBoolIfTrue("hidden", p.Hidden)
+	q.AddStringIfNonEmpty("source", p.Source)
 	r := &CreateBuildResponse{}
 	return r, q.Post(ctx, r)
 }
