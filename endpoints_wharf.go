@@ -66,6 +66,28 @@ func (c *Client) GetChannel(ctx context.Context, target string, channel string) 
 
 //-------------------------------------------------------
 
+// GetWharfBuildParams : params for GetWharfBuild
+type GetWharfBuildParams struct {
+	BuildID int64
+}
+
+// GetWharfBuildResponse : response for GetWharfBuild
+type GetWharfBuildResponse struct {
+	Build *Build `json:"build"`
+}
+
+// GetWharfBuild retrieves info about a single build by ID via the owner-side
+// wharf endpoint. Unlike GetBuild (which goes through the consumer endpoint
+// for seeing if someone can access a build), this is for the build owner to
+// check the status of the build
+func (c *Client) GetWharfBuild(ctx context.Context, p GetWharfBuildParams) (*GetWharfBuildResponse, error) {
+	q := NewQuery(c, "/wharf/builds/%d", p.BuildID)
+	r := &GetWharfBuildResponse{}
+	return r, q.Get(ctx, r)
+}
+
+//-------------------------------------------------------
+
 // CreateBuildParams : params for CreateBuild
 type CreateBuildParams struct {
 	Target      string
