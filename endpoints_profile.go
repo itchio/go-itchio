@@ -90,16 +90,21 @@ type ListProfileBuildsParams struct {
 }
 
 // ListProfileBuildsResponse : response for ListProfileBuilds
+//
+// Builds are denormalized: each build carries scalar GameID/UploadID, and the
+// referenced games/uploads are returned once each in Games/Uploads. This avoids
+// large response inflation when many builds share the same game or upload.
 type ListProfileBuildsResponse struct {
 	Builds  []*Build             `json:"builds"`
+	Games   []*Game              `json:"games"`
+	Uploads []*Upload            `json:"uploads"`
 	Page    int64                `json:"page"`
 	PerPage int64                `json:"perPage"`
 	Totals  *ProfileBuildsTotals `json:"totals,omitempty"`
 }
 
 // ListProfileBuilds lists builds across all games the current user develops.
-// Each build includes nested game and upload context so the client can render
-// per-row metadata without further round-trips.
+// The response is denormalized — see ListProfileBuildsResponse.
 func (c *Client) ListProfileBuilds(ctx context.Context, p ListProfileBuildsParams) (*ListProfileBuildsResponse, error) {
 	q := NewQuery(c, "/profile/builds")
 	q.AddInt64IfNonZero("page", p.Page)
