@@ -91,14 +91,15 @@ type ListProfileBuildsParams struct {
 
 // ListProfileBuildsResponse : response for ListProfileBuilds
 //
-// The response is normalized: each build carries scalar GameID/UploadID, and
-// the referenced games/uploads are returned once each in Games/Uploads. This
-// avoids large response inflation when many builds share the same game or
-// upload.
+// The response is normalized: each build carries scalar GameID/UploadID/UserID,
+// and the referenced games/uploads/users are returned once each in
+// Games/Uploads/Users. This avoids large response inflation when many builds
+// share the same game, upload, or user.
 type ListProfileBuildsResponse struct {
 	Builds  []*Build             `json:"builds"`
 	Games   []*Game              `json:"games"`
 	Uploads []*Upload            `json:"uploads"`
+	Users   []*User              `json:"users"`
 	Page    int64                `json:"page"`
 	PerPage int64                `json:"perPage"`
 	Totals  *ProfileBuildsTotals `json:"totals,omitempty"`
