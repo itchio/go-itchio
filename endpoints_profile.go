@@ -1,6 +1,10 @@
 package itchio
 
-import "context"
+import (
+	"context"
+	"strconv"
+	"strings"
+)
 
 //-------------------------------------------------------
 
@@ -87,6 +91,11 @@ type ListProfileBuildsParams struct {
 	State string
 	// Optional. If set, include aggregate totals in the response.
 	IncludeTotals bool
+	// Optional. Build IDs in the "started" state to surface in the listing.
+	// Started builds are normally excluded; naming them here opts them in for
+	// the default and "processing" views (useful for polling a build that is
+	// still being created). Limited to 100 IDs.
+	StartedBuildIDs []int64
 }
 
 // ListProfileBuildsResponse : response for ListProfileBuilds
@@ -113,6 +122,13 @@ func (c *Client) ListProfileBuilds(ctx context.Context, p ListProfileBuildsParam
 	q.AddStringIfNonEmpty("state", p.State)
 	if p.IncludeTotals {
 		q.AddStringIfNonEmpty("include_totals", "1")
+	}
+	if len(p.StartedBuildIDs) > 0 {
+		ids := make([]string, len(p.StartedBuildIDs))
+		for i, id := range p.StartedBuildIDs {
+			ids[i] = strconv.FormatInt(id, 10)
+		}
+		q.AddString("started_build_ids", strings.Join(ids, ","))
 	}
 	r := &ListProfileBuildsResponse{}
 	return r, q.Get(ctx, r)
