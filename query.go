@@ -36,9 +36,12 @@ func (q *Query) AddValues(values url.Values) {
 }
 
 // AddBoolIfTrue adds the parameter key=true only if value is true.
+// The literal string "true" is sent (not an empty value) so server-side
+// code using strict truthiness checks (e.g. Rails' params[:k].present?,
+// ActiveModel boolean coercion) interprets the parameter consistently.
 func (q *Query) AddBoolIfTrue(key string, value bool) {
 	if value {
-		q.Values.Add(key, "")
+		q.Values.Add(key, "true")
 	}
 }
 
