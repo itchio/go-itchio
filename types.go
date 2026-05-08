@@ -396,8 +396,11 @@ type BuildState string
 const (
 	// BuildStateStarted is the state of a build from its creation until the initial upload is complete
 	BuildStateStarted BuildState = "started"
-	// BuildStateProcessing is the state of a build from the initial upload's completion to its fully-processed state.
-	// This state does not mean the build is actually being processed right now, it's just queued for processing.
+	// BuildStateQueued is the state of a build after its initial upload is complete,
+	// before a worker has claimed it for processing.
+	BuildStateQueued BuildState = "queued"
+	// BuildStateProcessing is the state of a build that has been claimed by a worker
+	// and is actively being processed.
 	BuildStateProcessing BuildState = "processing"
 	// BuildStateCompleted means the build was successfully processed. Its patch hasn't necessarily been
 	// rediff'd yet, but we have the holy (patch,signature,archive) trinity.
