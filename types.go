@@ -393,6 +393,9 @@ type BundleKey struct {
 
 	// Date this key was created at (often coincides with purchase time)
 	CreatedAt *time.Time `json:"createdAt"`
+
+	// Identifier of the itch.io user to which this key belongs
+	OwnerID int64 `json:"ownerId"`
 }
 
 // A DownloadKey is often generated when a purchase is made, it
