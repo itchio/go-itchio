@@ -74,6 +74,23 @@ func (c *Client) ListProfileCollections(ctx context.Context) (*ListProfileCollec
 
 //-------------------------------------------------------
 
+// ListProfileOwnedBundlesResponse : response for ListProfileOwnedBundles
+type ListProfileOwnedBundlesResponse struct {
+	BundleKeys []*BundleKey `json:"bundleKeys"`
+}
+
+// ListProfileOwnedBundles lists the bundles the current user owns. Each
+// BundleKey has its Bundle field populated. Deduped across multiple
+// purchases of the same bundle; sale bundles are currently excluded; capped
+// at 100.
+func (c *Client) ListProfileOwnedBundles(ctx context.Context) (*ListProfileOwnedBundlesResponse, error) {
+	q := NewQuery(c, "/profile/owned-bundles")
+	r := &ListProfileOwnedBundlesResponse{}
+	return r, q.Get(ctx, r)
+}
+
+//-------------------------------------------------------
+
 // ProfileBuildsTotals : per-state counts and project count for the current page set
 type ProfileBuildsTotals struct {
 	All          int64 `json:"all"`
