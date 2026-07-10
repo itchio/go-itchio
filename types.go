@@ -78,7 +78,7 @@ type Game struct {
 	User *User `json:"user,omitempty"`
 
 	// ID of the user account this game is associated to
-	UserID int64 `json:"userId,omitempty"`
+	UserID int64 `json:"userId"`
 
 	// The best current sale for this game
 	// @optional
@@ -321,7 +321,7 @@ type CollectionGame struct {
 	Collection   *Collection `json:"collection,omitempty"`
 
 	GameID int64 `json:"gameId" hades:"primary_key"`
-	Game   *Game `json:"game,omitempty"`
+	Game   *Game `json:"game"`
 
 	Position int64 `json:"position"`
 
@@ -345,7 +345,7 @@ type Bundle struct {
 	Title string `json:"title"`
 
 	// Canonical address of the bundle's page on itch.io
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 
 	// Cover url for the bundle (the social_banner image), if any
 	CoverURL string `json:"coverUrl,omitempty"`
@@ -375,7 +375,7 @@ type BundleGame struct {
 	Bundle   *Bundle `json:"bundle,omitempty"`
 
 	GameID int64 `json:"gameId" hades:"primary_key"`
-	Game   *Game `json:"game,omitempty"`
+	Game   *Game `json:"game"`
 
 	Position int64 `json:"position"`
 
