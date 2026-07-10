@@ -206,7 +206,7 @@ type Upload struct {
 	ChannelName string `json:"channelName"`
 	// Latest build for this upload, if it's a wharf-enabled upload
 	// @optional
-	Build *Build `json:"build"`
+	Build *Build `json:"build,omitempty"`
 	// ID of the latest build for this upload, if it's a wharf-enabled upload
 	BuildID int64 `json:"buildId,omitempty"`
 
@@ -224,10 +224,10 @@ type Upload struct {
 
 	// Date this upload was created at
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Date this upload was last updated at (order changed, display name set, etc.)
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // UploadStorage describes where an upload file is stored.
@@ -298,10 +298,10 @@ type Collection struct {
 
 	// Date this collection was created at
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Date this collection was last updated at (item added, title set, etc.)
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
 	// Number of games in the collection. This might not be accurate
 	// as some games might not be accessible to whoever is asking (project
@@ -326,9 +326,9 @@ type CollectionGame struct {
 	Position int64 `json:"position"`
 
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
 	Blurb  string `json:"blurb"`
 	UserID int64  `json:"userId"`
@@ -383,9 +383,9 @@ type BundleGame struct {
 	MinPrice int64 `json:"minPrice,omitempty"`
 
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // A BundleKey records a profile's ownership of a Bundle via a specific
@@ -406,7 +406,7 @@ type BundleKey struct {
 
 	// Date this key was created at (often coincides with purchase time)
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 
 	// Identifier of the itch.io user to which this key belongs
 	OwnerID int64 `json:"ownerId"`
@@ -427,10 +427,10 @@ type DownloadKey struct {
 
 	// Date this key was created at (often coincides with purchase time)
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Date this key was last updated at
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
 	// Identifier of the itch.io user to which this key belongs
 	OwnerID int64 `json:"ownerId"`
@@ -466,17 +466,17 @@ type Build struct {
 
 	// User who pushed the build (not preserved by butler's local database cache)
 	// @optional
-	User *User `json:"user"`
+	User *User `json:"user,omitempty"`
 	// Upload this build belongs to (only populated by endpoints that nest it)
 	Upload *Upload `json:"upload,omitempty"`
 	// Game this build belongs to (only populated by endpoints that nest it)
 	Game *Game `json:"game,omitempty"`
 	// Timestamp the build was created at
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Timestamp the build was last updated at
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // BuildState describes the state of a build, relative to its initial upload, and
@@ -517,10 +517,10 @@ type BuildFile struct {
 
 	// Date this build file was created at
 	// @optional
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Date this build file was last updated at
 	// @optional
-	UpdatedAt *time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // BuildFileState describes the state of a specific file for a build
