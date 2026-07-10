@@ -205,6 +205,7 @@ type Upload struct {
 	// Name of the wharf channel for this upload, if it's a wharf-enabled upload
 	ChannelName string `json:"channelName"`
 	// Latest build for this upload, if it's a wharf-enabled upload
+	// @optional
 	Build *Build `json:"build"`
 	// ID of the latest build for this upload, if it's a wharf-enabled upload
 	BuildID int64 `json:"buildId,omitempty"`
@@ -222,8 +223,10 @@ type Upload struct {
 	Platforms Platforms `json:"platforms" hades:"squash"`
 
 	// Date this upload was created at
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
 	// Date this upload was last updated at (order changed, display name set, etc.)
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
@@ -294,8 +297,10 @@ type Collection struct {
 	Title string `json:"title"`
 
 	// Date this collection was created at
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
 	// Date this collection was last updated at (item added, title set, etc.)
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// Number of games in the collection. This might not be accurate
@@ -320,7 +325,9 @@ type CollectionGame struct {
 
 	Position int64 `json:"position"`
 
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 
 	Blurb  string `json:"blurb"`
@@ -375,7 +382,9 @@ type BundleGame struct {
 	// Minimum price for this game inside the bundle, in cents of a dollar.
 	MinPrice int64 `json:"minPrice,omitempty"`
 
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
@@ -396,6 +405,7 @@ type BundleKey struct {
 	PurchaseID int64 `json:"purchaseId"`
 
 	// Date this key was created at (often coincides with purchase time)
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
 
 	// Identifier of the itch.io user to which this key belongs
@@ -416,8 +426,10 @@ type DownloadKey struct {
 	Game *Game `json:"game,omitempty"`
 
 	// Date this key was created at (often coincides with purchase time)
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
 	// Date this key was last updated at
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// Identifier of the itch.io user to which this key belongs
@@ -452,15 +464,18 @@ type Build struct {
 	// is still processing or if processing has failed.
 	Files []*BuildFile `json:"files"`
 
-	// User who pushed the build
+	// User who pushed the build (not preserved by butler's local database cache)
+	// @optional
 	User *User `json:"user"`
 	// Upload this build belongs to (only populated by endpoints that nest it)
 	Upload *Upload `json:"upload,omitempty"`
 	// Game this build belongs to (only populated by endpoints that nest it)
 	Game *Game `json:"game,omitempty"`
 	// Timestamp the build was created at
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
 	// Timestamp the build was last updated at
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
@@ -501,8 +516,10 @@ type BuildFile struct {
 	SubType BuildFileSubType `json:"subType"`
 
 	// Date this build file was created at
+	// @optional
 	CreatedAt *time.Time `json:"createdAt"`
 	// Date this build file was last updated at
+	// @optional
 	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
