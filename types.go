@@ -346,6 +346,10 @@ type Bundle struct {
 	// Number of games in this bundle.
 	GamesCount int64 `json:"gamesCount"`
 
+	// Bumped by itch.io whenever the bundle's game list changes. Compare
+	// against a stored value to skip re-fetching an unchanged bundle.
+	Version int64 `json:"version"`
+
 	// Date the bundle was created at
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Date the bundle was last updated at
