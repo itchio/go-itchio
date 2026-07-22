@@ -43,6 +43,8 @@ type SessionArchitecture string
 const (
 	SessionArchitecture386   SessionArchitecture = "386"
 	SessionArchitectureAmd64 SessionArchitecture = "amd64"
+	SessionArchitectureArm64 SessionArchitecture = "arm64"
+	SessionArchitectureArm   SessionArchitecture = "arm"
 )
 
 // CreateUserGameSessionParams : params for CreateUserGameSession
