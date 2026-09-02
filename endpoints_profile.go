@@ -65,9 +65,17 @@ type ListProfileCollectionsResponse struct {
 	Collections []*Collection `json:"collections"`
 }
 
-// ListProfileCollections lists the collections associated to a profile.
-func (c *Client) ListProfileCollections(ctx context.Context) (*ListProfileCollectionsResponse, error) {
+// ListProfileCollectionsParams : params for ListProfileCollections
+type ListProfileCollectionsParams struct {
+	// When set, every returned collection has HasGame filled in for this game
+	GameID int64
+}
+
+// ListProfileCollections lists the collections the current user owns or
+// is an admin of.
+func (c *Client) ListProfileCollections(ctx context.Context, p ListProfileCollectionsParams) (*ListProfileCollectionsResponse, error) {
 	q := NewQuery(c, "/profile/collections")
+	q.AddInt64IfNonZero("game_id", p.GameID)
 	r := &ListProfileCollectionsResponse{}
 	return r, q.Get(ctx, r)
 }

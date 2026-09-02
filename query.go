@@ -2,6 +2,7 @@ package itchio
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"time"
@@ -40,6 +41,40 @@ func (q *Query) AddBoolIfTrue(key string, value bool) {
 	if value {
 		q.Values.Add(key, "true")
 	}
+}
+
+// AddBool adds the parameter key=true or key=false
+func (q *Query) AddBool(key string, value bool) {
+	if value {
+		q.Values.Add(key, "true")
+	} else {
+		q.Values.Add(key, "false")
+	}
+}
+
+// AddBoolPtr adds param key=true or key=false only if value is not a nil pointer
+func (q *Query) AddBoolPtr(key string, value *bool) {
+	if value != nil {
+		q.AddBool(key, *value)
+	}
+}
+
+// AddStringPtr adds param key=value only if value is not a nil pointer.
+// An empty string is sent as-is, which the API treats as clearing the field.
+func (q *Query) AddStringPtr(key string, value *string) {
+	if value != nil {
+		q.AddString(key, *value)
+	}
+}
+
+// AddInt64List adds param key=[1,2,3], a JSON-encoded array of ids
+func (q *Query) AddInt64List(key string, values []int64) {
+	encoded, err := json.Marshal(values)
+	if err != nil {
+		// a slice of int64 always marshals
+		panic(err)
+	}
+	q.AddString(key, string(encoded))
 }
 
 // AddString adds the parameter key=value even if the value is empty.

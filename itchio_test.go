@@ -121,3 +121,122 @@ func Test_ParseSpec(t *testing.T) {
 	_, err = ParseSpec("a:b:c")
 	assert.Error(t, err)
 }
+
+// captureTools is like testTools but also records the body of the last
+// request so tests can check how params were encoded
+func captureTools(code int, body string, lastBody *url.Values) (*httptest.Server, *Client) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err == nil {
+			*lastBody = r.PostForm
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(code)
+		fmt.Fprintln(w, body)
+	}))
+
+	transport := &http.Transport{
+		Proxy: func(req *http.Request) (*url.URL, error) {
+			return url.Parse(server.URL)
+		},
+	}
+
+	client := ClientWithKey("APIKEY")
+	client.HTTPClient = &http.Client{Transport: transport}
+	client.BaseURL = server.URL
+
+	return server, client
+}
+
+func Test_CreateCollection(t *testing.T) {
+	var form url.Values
+	server, client := captureTools(200, `{
+		"collection": {
+			"id": 12,
+			"title": "Favorites",
+			"url": "https://itch.io/c/12/favorites",
+			"private": true,
+			"layout": "list",
+			"games_count": 1
+		}
+	}`, &form)
+	defer server.Close()
+
+	res, err := client.CreateCollection(context.Background(), CreateCollectionParams{
+		Title:   "Favorites",
+		Private: true,
+		GameID:  99,
+		Blurb:   "<p>good</p>",
+	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 12, res.Collection.ID)
+	assert.EqualValues(t, CollectionLayoutList, res.Collection.Layout)
+	assert.True(t, res.Collection.Private)
+
+	assert.EqualValues(t, "Favorites", form.Get("title"))
+	assert.EqualValues(t, "true", form.Get("private"))
+	assert.EqualValues(t, "99", form.Get("game_id"))
+	assert.EqualValues(t, "<p>good</p>", form.Get("blurb"))
+	assert.False(t, form.Has("description"))
+	assert.False(t, form.Has("layout"))
+}
+
+func Test_UpdateCollectionPartial(t *testing.T) {
+	var form url.Values
+	server, client := captureTools(200, `{"collection": {"id": 12, "title": "Old"}}`, &form)
+	defer server.Close()
+
+	private := false
+	description := ""
+	_, err := client.UpdateCollection(context.Background(), UpdateCollectionParams{
+		CollectionID: 12,
+		Private:      &private,
+		Description:  &description,
+	})
+	assert.NoError(t, err)
+
+	assert.EqualValues(t, "false", form.Get("private"))
+	assert.True(t, form.Has("description"))
+	assert.EqualValues(t, "", form.Get("description"))
+	assert.False(t, form.Has("title"))
+	assert.False(t, form.Has("layout"))
+	assert.False(t, form.Has("on_profile"))
+}
+
+func Test_OrderCollectionGames(t *testing.T) {
+	var form url.Values
+	server, client := captureTools(200, `{"success": true}`, &form)
+	defer server.Close()
+
+	res, err := client.OrderCollectionGames(context.Background(), OrderCollectionGamesParams{
+		CollectionID:  12,
+		GameIDs:       []int64{3, 1, 2},
+		RemoveGameIDs: []int64{7},
+	})
+	assert.NoError(t, err)
+	assert.True(t, res.Success)
+	assert.EqualValues(t, "[3,1,2]", form.Get("game_ids"))
+	assert.EqualValues(t, "[7]", form.Get("remove_game_ids"))
+
+	_, err = client.OrderCollectionGames(context.Background(), OrderCollectionGamesParams{
+		CollectionID: 12,
+	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, "[]", form.Get("game_ids"))
+	assert.False(t, form.Has("remove_game_ids"))
+}
+
+func Test_ListProfileCollectionsHasGame(t *testing.T) {
+	server, client := testTools(200, `{
+		"collections": [
+			{"id": 1, "title": "A", "has_game": true},
+			{"id": 2, "title": "B", "has_game": false}
+		]
+	}`)
+	defer server.Close()
+
+	res, err := client.ListProfileCollections(context.Background(), ListProfileCollectionsParams{GameID: 5})
+	assert.NoError(t, err)
+	assert.Len(t, res.Collections, 2)
+	assert.True(t, res.Collections[0].HasGame)
+	assert.False(t, res.Collections[1].HasGame)
+}
