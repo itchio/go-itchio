@@ -237,6 +237,20 @@ func Test_ListProfileCollectionsHasGame(t *testing.T) {
 	res, err := client.ListProfileCollections(context.Background(), ListProfileCollectionsParams{GameID: 5})
 	assert.NoError(t, err)
 	assert.Len(t, res.Collections, 2)
-	assert.True(t, res.Collections[0].HasGame)
-	assert.False(t, res.Collections[1].HasGame)
+	if assert.NotNil(t, res.Collections[0].HasGame) {
+		assert.True(t, *res.Collections[0].HasGame)
+	}
+	if assert.NotNil(t, res.Collections[1].HasGame) {
+		assert.False(t, *res.Collections[1].HasGame)
+	}
+}
+
+func Test_ListProfileCollectionsWithoutGameOmitsHasGame(t *testing.T) {
+	server, client := testTools(200, `{"collections": [{"id": 1, "title": "A"}]}`)
+	defer server.Close()
+
+	res, err := client.ListProfileCollections(context.Background(), ListProfileCollectionsParams{})
+	assert.NoError(t, err)
+	assert.Len(t, res.Collections, 1)
+	assert.Nil(t, res.Collections[0].HasGame)
 }
