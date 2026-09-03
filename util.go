@@ -12,9 +12,18 @@ type Spec struct {
 }
 
 // ParseSpec parses something of the form `user/page:channel` and returns
-// `user/page` and `channel` separately
+// `user/page` and `channel` separately.
+//
+// The target may also be given as an itch.io game page URL, with or without
+// a scheme: `https://user.itch.io/page` or `user.itch.io/page:channel` are
+// normalized to `user/page`.
 func ParseSpec(specIn string) (*Spec, error) {
-	specStr := strings.ToLower(specIn)
+	specStr := strings.ToLower(strings.TrimSpace(specIn))
+
+	// strip the scheme first, otherwise its colon reads as the channel separator
+	specStr = strings.TrimPrefix(specStr, "https://")
+	specStr = strings.TrimPrefix(specStr, "http://")
+
 	tokens := strings.Split(specStr, ":")
 
 	spec := &Spec{}
@@ -30,7 +39,36 @@ func ParseSpec(specIn string) (*Spec, error) {
 		return nil, fmt.Errorf("invalid spec: %s, expected something of the form user/page:channel", specIn)
 	}
 
+	if target, ok := targetFromURL(spec.Target); ok {
+		spec.Target = target
+	}
+
+	if spec.Target == "" {
+		return nil, fmt.Errorf("invalid spec: %s, expected something of the form user/page:channel", specIn)
+	}
+
 	return spec, nil
+}
+
+// targetFromURL turns a scheme-less itch.io game page URL like
+// `user.itch.io/page/anything?x#y` into `user/page`. It only matches hosts
+// of the form `<user>.itch.io`; custom domains can't be resolved client-side.
+func targetFromURL(s string) (string, bool) {
+	host, path, hasPath := strings.Cut(s, "/")
+	user, ok := strings.CutSuffix(host, ".itch.io")
+	if !ok || user == "" || strings.Contains(user, ".") || !hasPath {
+		return "", false
+	}
+
+	page := path
+	if i := strings.IndexAny(page, "/?#"); i >= 0 {
+		page = page[:i]
+	}
+	if page == "" {
+		return "", false
+	}
+
+	return user + "/" + page, true
 }
 
 func (spec *Spec) String() string {
