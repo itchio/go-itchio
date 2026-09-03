@@ -315,7 +315,7 @@ type Collection struct {
 	Layout CollectionLayout `json:"layout,omitempty"`
 	// Only set when listing collections filtered by a game: whether
 	// that game is in this collection
-	HasGame bool `json:"hasGame,omitempty"`
+	HasGame bool `json:"hasGame,omitempty" hades:"-"`
 
 	// Date this collection was created at
 	// @optional
