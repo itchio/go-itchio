@@ -97,7 +97,15 @@ type CreateBuildParams struct {
 	// Source identifies the surface that initiated the push (e.g.
 	// "cli", "butlerd", "app"). Recorded by the API for analytics.
 	Source string
+	// Metadata describes where the build's files came from, for example
+	// which Steam build a steam-sync copied. The API validates its shape
+	// and rejects unknown keys; it is not verified beyond that.
+	Metadata BuildMetadata
 }
+
+// BuildMetadata is the JSON object stored with a build. The API owns
+// the schema; see Builds.data_shape on the server.
+type BuildMetadata map[string]interface{}
 
 // CreateBuildResponse : response for CreateBuild
 type CreateBuildResponse struct {
@@ -119,6 +127,13 @@ func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateB
 	q.AddStringIfNonEmpty("user_version", p.UserVersion)
 	q.AddBoolIfTrue("hidden", p.Hidden)
 	q.AddStringIfNonEmpty("source", p.Source)
+	if len(p.Metadata) > 0 {
+		jsonData, err := json.Marshal(p.Metadata)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		q.AddString("metadata", string(jsonData))
+	}
 	r := &CreateBuildResponse{}
 	return r, q.Post(ctx, r)
 }
