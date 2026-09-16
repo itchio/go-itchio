@@ -19,7 +19,7 @@ type Query struct {
 // NewQuery creates a new query with a given formatted path,
 // attached to a specific client (for http transport, retry logic,
 // credentials)
-func NewQuery(c *Client, format string, a ...interface{}) *Query {
+func NewQuery(c *Client, format string, a ...any) *Query {
 	return &Query{
 		Client: c,
 		Path:   fmt.Sprintf(format, a...),
@@ -134,13 +134,13 @@ func (q *Query) URL() string {
 
 // Get performs this query as an HTTP GET request with the tied client.
 // Params are URL-encoded and added to the path, see URL().
-func (q *Query) Get(ctx context.Context, r interface{}) error {
+func (q *Query) Get(ctx context.Context, r any) error {
 	return q.Client.GetResponse(ctx, q.URL(), r)
 }
 
 // Post performs this query as an HTTP POST request with the tied client.
 // Parameters are URL-encoded and passed as the body of the POST request.
-func (q *Query) Post(ctx context.Context, r interface{}) error {
+func (q *Query) Post(ctx context.Context, r any) error {
 	url := q.Client.MakePath("%s", q.Path)
 	return q.Client.PostFormResponse(ctx, url, q.Values, r)
 }

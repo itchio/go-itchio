@@ -31,7 +31,7 @@ func Test_GameHook(t *testing.T) {
 		}`)
 
 	{
-		intermediateTraits := make(map[string]interface{})
+		intermediateTraits := make(map[string]any)
 		err := json.Unmarshal(marshalledTraits, &intermediateTraits)
 		assert.NoError(t, err)
 
@@ -49,7 +49,7 @@ func Test_GameHook(t *testing.T) {
 	}
 
 	{
-		intermediateSane := make(map[string]interface{})
+		intermediateSane := make(map[string]any)
 		err := json.Unmarshal(marshalledSane, &intermediateSane)
 		assert.NoError(t, err)
 
@@ -91,7 +91,7 @@ func Test_GameHookNested(t *testing.T) {
 			"platforms": {"linux": "all", "windows": "all"}
 		}]}`)
 
-	intermediate := make(map[string]interface{})
+	intermediate := make(map[string]any)
 	err := json.Unmarshal(marshalledSane, &intermediate)
 	tmust(t, err)
 

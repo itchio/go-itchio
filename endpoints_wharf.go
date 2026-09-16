@@ -102,13 +102,13 @@ type CreateBuildParams struct {
 	// Metadata describes where the build's files came from, for example
 	// which Steam build a steam-sync copied. The API validates its shape
 	// and rejects unknown keys; it is not verified beyond that.
-	Metadata BuildMetadata
+	Metadata       BuildMetadata
 	LaunchAnalysis *BuildLaunchAnalysis
 }
 
 // BuildMetadata is the JSON object stored with a build. The API owns
 // the schema; see Builds.data_shape on the server.
-type BuildMetadata map[string]interface{}
+type BuildMetadata map[string]any
 
 type BuildLaunchAnalysis struct {
 	// SchemaVersion should be dash.LaunchTargetsSchemaVersion.
@@ -296,7 +296,7 @@ const (
 )
 
 // BuildEventData is a JSON object associated with a build event
-type BuildEventData map[string]interface{}
+type BuildEventData map[string]any
 
 // CreateBuildEventResponse is what the API responds with when you create a new build event
 type CreateBuildEventResponse struct{}

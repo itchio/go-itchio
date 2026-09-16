@@ -1,11 +1,11 @@
 package itchio
 
-func camelify(input interface{}) interface{} {
-	if m, ok := input.(map[string]interface{}); ok {
+func camelify(input any) any {
+	if m, ok := input.(map[string]any); ok {
 		return camelifyMap(m)
 	}
 
-	if a, ok := input.([]interface{}); ok {
+	if a, ok := input.([]any); ok {
 		return camelifyArray(a)
 	}
 
@@ -17,8 +17,8 @@ var camelifyBlacklist = map[string]struct{}{
 	"upload_headers": {},
 }
 
-func camelifyArray(input []interface{}) []interface{} {
-	var result []interface{}
+func camelifyArray(input []any) []any {
+	var result []any
 
 	for _, el := range input {
 		result = append(result, camelify(el))
@@ -27,8 +27,8 @@ func camelifyArray(input []interface{}) []interface{} {
 	return result
 }
 
-func camelifyMap(input map[string]interface{}) map[string]interface{} {
-	result := make(map[string]interface{})
+func camelifyMap(input map[string]any) map[string]any {
+	result := make(map[string]any)
 
 	for k, v := range input {
 		if _, ok := camelifyBlacklist[k]; ok {

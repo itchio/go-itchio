@@ -119,7 +119,7 @@ func (c *Client) Get(ctx context.Context, url string) (*http.Response, error) {
 }
 
 // GetResponse performs an HTTP GET request and parses the API response.
-func (c *Client) GetResponse(ctx context.Context, url string, dst interface{}) error {
+func (c *Client) GetResponse(ctx context.Context, url string, dst any) error {
 	resp, err := c.Get(ctx, url)
 	if err != nil {
 		return pkgerrors.WithStack(err)
@@ -150,7 +150,7 @@ func (c *Client) PostForm(ctx context.Context, url string, data url.Values) (*ht
 }
 
 // PostFormResponse performs an HTTP POST request to the API *and* parses the API response.
-func (c *Client) PostFormResponse(ctx context.Context, url string, data url.Values, dst interface{}) error {
+func (c *Client) PostFormResponse(ctx context.Context, url string, data url.Values, dst any) error {
 	resp, err := c.PostForm(ctx, url, data)
 	if err != nil {
 		return pkgerrors.WithStack(err)
@@ -319,12 +319,12 @@ func (c *Client) doWithRetryWithAttempt(req *http.Request, allow401Retry bool, a
 }
 
 // MakePath crafts an API url from our configured base URL
-func (c *Client) MakePath(format string, a ...interface{}) string {
+func (c *Client) MakePath(format string, a ...any) string {
 	return c.MakeValuesPath(nil, format, a...)
 }
 
 // MakeValuesPath crafts an API url from our configured base URL
-func (c *Client) MakeValuesPath(values url.Values, format string, a ...interface{}) string {
+func (c *Client) MakeValuesPath(values url.Values, format string, a ...any) string {
 	base := strings.Trim(c.BaseURL, "/")
 	subPath := strings.Trim(fmt.Sprintf(format, a...), "/")
 	path := fmt.Sprintf("%s/%s", base, subPath)
@@ -344,7 +344,7 @@ func asHTTPCodeError(res *http.Response) error {
 
 // ParseAPIResponse unmarshals an HTTP response into one of out response
 // data structures
-func ParseAPIResponse(dst interface{}, res *http.Response) error {
+func ParseAPIResponse(dst any, res *http.Response) error {
 	if res == nil || res.Body == nil {
 		return fmt.Errorf("No response from server")
 	}
@@ -361,7 +361,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 		fmt.Fprintf(os.Stderr, "[response] %s\n", string(body))
 	}
 
-	intermediate := make(map[string]interface{})
+	intermediate := make(map[string]any)
 
 	err = json.NewDecoder(bytes.NewReader(body)).Decode(&intermediate)
 	if err != nil {
@@ -374,7 +374,7 @@ func ParseAPIResponse(dst interface{}, res *http.Response) error {
 	}
 
 	if errorsField, ok := intermediate["errors"]; ok {
-		if errorsList, ok := errorsField.([]interface{}); ok {
+		if errorsList, ok := errorsField.([]any); ok {
 			var messages []string
 			for _, el := range errorsList {
 				if errorMessage, ok := el.(string); ok {

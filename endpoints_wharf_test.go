@@ -37,12 +37,12 @@ func TestCreateBuildMetadata(t *testing.T) {
 		Target:  "user/game",
 		Channel: "linux",
 		Metadata: BuildMetadata{
-			"steam": map[string]interface{}{"app_id": 3445480, "branch": "alphatest"},
+			"steam": map[string]any{"app_id": 3445480, "branch": "alphatest"},
 		},
 	})
 	assert.NoError(t, err)
 	values, _ = url.ParseQuery(body)
-	var got map[string]map[string]interface{}
+	var got map[string]map[string]any
 	assert.NoError(t, json.Unmarshal([]byte(values.Get("metadata")), &got))
 	assert.EqualValues(t, 3445480, got["steam"]["app_id"])
 	assert.Equal(t, "alphatest", got["steam"]["branch"])
@@ -72,7 +72,7 @@ func TestCreateBuildLaunchAnalysis(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			params := CreateBuildParams{
 				Target: "user/game", Channel: "linux", Source: "app",
-				Metadata: BuildMetadata{"steam": map[string]interface{}{"app_id": 123}},
+				Metadata: BuildMetadata{"steam": map[string]any{"app_id": 123}},
 			}
 			if tc.targets != nil {
 				params.LaunchAnalysis = &BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: tc.targets}

@@ -24,16 +24,16 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
-func decodeJSONLogRecords(t *testing.T, b *bytes.Buffer) []map[string]interface{} {
+func decodeJSONLogRecords(t *testing.T, b *bytes.Buffer) []map[string]any {
 	t.Helper()
 
-	var records []map[string]interface{}
-	for _, line := range strings.Split(strings.TrimSpace(b.String()), "\n") {
+	var records []map[string]any
+	for line := range strings.SplitSeq(strings.TrimSpace(b.String()), "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
 
-		var record map[string]interface{}
+		var record map[string]any
 		err := json.Unmarshal([]byte(line), &record)
 		assert.NoError(t, err)
 		records = append(records, record)
@@ -162,7 +162,7 @@ func TestSlogHTTP_OAuth401RefreshRetry(t *testing.T) {
 
 	records := decodeJSONLogRecords(t, &logs)
 
-	var profileLogs []map[string]interface{}
+	var profileLogs []map[string]any
 	for _, record := range records {
 		loggedURL, ok := record["url"].(string)
 		if ok && strings.Contains(loggedURL, "/profile") {
