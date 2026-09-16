@@ -129,7 +129,7 @@ func (q *Query) AddGameCredentials(gc GameCredentials) {
 // URL returns the full path for this query, as if it was a GET
 // request (all parameters are encoded into the request URL)
 func (q *Query) URL() string {
-	return q.Client.MakeValuesPath(q.Values, q.Path)
+	return q.Client.MakeValuesPath(q.Values, "%s", q.Path)
 }
 
 // Get performs this query as an HTTP GET request with the tied client.
@@ -141,6 +141,6 @@ func (q *Query) Get(ctx context.Context, r interface{}) error {
 // Post performs this query as an HTTP POST request with the tied client.
 // Parameters are URL-encoded and passed as the body of the POST request.
 func (q *Query) Post(ctx context.Context, r interface{}) error {
-	url := q.Client.MakePath(q.Path)
+	url := q.Client.MakePath("%s", q.Path)
 	return q.Client.PostFormResponse(ctx, url, q.Values, r)
 }
