@@ -1,8 +1,10 @@
 package itchio
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -101,11 +103,23 @@ type CreateBuildParams struct {
 	// which Steam build a steam-sync copied. The API validates its shape
 	// and rejects unknown keys; it is not verified beyond that.
 	Metadata BuildMetadata
+	LaunchAnalysis *BuildLaunchAnalysis
 }
 
 // BuildMetadata is the JSON object stored with a build. The API owns
 // the schema; see Builds.data_shape on the server.
 type BuildMetadata map[string]interface{}
+
+type BuildLaunchAnalysis struct {
+	// SchemaVersion should be dash.LaunchTargetsSchemaVersion.
+	SchemaVersion int `json:"schema_version"`
+	// ScannerVersion identifies the scanning client, e.g. "butler/15.26.0".
+	ScannerVersion string `json:"scanner_version"`
+	// LaunchTargets is a marshaled []dash.LaunchTarget, kept raw so this
+	// package doesn't depend on dash. Use [] when the scan found nothing;
+	// null is rejected.
+	LaunchTargets json.RawMessage `json:"launch_targets"`
+}
 
 // CreateBuildResponse : response for CreateBuild
 type CreateBuildResponse struct {
@@ -133,6 +147,24 @@ func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateB
 			return nil, errors.WithStack(err)
 		}
 		q.AddString("metadata", string(jsonData))
+	}
+	if p.LaunchAnalysis != nil {
+		analysis := p.LaunchAnalysis
+		if analysis.SchemaVersion <= 0 {
+			return nil, errors.New("launch analysis schema version must be positive")
+		}
+		if strings.TrimSpace(analysis.ScannerVersion) == "" {
+			return nil, errors.New("launch analysis scanner version is required")
+		}
+		targets := bytes.TrimSpace(analysis.LaunchTargets)
+		if len(targets) == 0 || targets[0] != '[' || !json.Valid(targets) {
+			return nil, errors.New("launch analysis targets must be a JSON array")
+		}
+		jsonData, err := json.Marshal(analysis)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		q.AddString("launch_analysis", string(jsonData))
 	}
 	r := &CreateBuildResponse{}
 	return r, q.Post(ctx, r)
