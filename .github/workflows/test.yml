@@ -9,7 +9,10 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - uses: actions/setup-go@v7
+      with:
+        go-version-file: go.mod
+
     - name: test
-      run: |
-        scripts/ci.sh
+      run: go test -v -race ./...
 
