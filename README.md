@@ -62,9 +62,9 @@ The itch.io API returns JSON with `snake_case` keys, but Go response types in th
 
 When defining new response types, write `json` tags in `camelCase` to match the post-remap keys.
 
-### `upload_headers` blacklist
+### Blacklisting fields from the remap
 
-The remap walks into nested maps and arrays by default, which would also rewrite the keys of arbitrary HTTP header maps returned by the API. To preserve those headers verbatim, `upload_headers` is listed in `camelifyBlacklist` (`camelify.go`): the field name itself is still camelified to `uploadHeaders`, but its inner map keys are left untouched. Add to this blacklist if you introduce another field whose values are user-controlled key/value data rather than a known schema.
+The remap walks into nested maps and arrays by default, which breaks fields whose values are arbitrary key/value data rather than a known schema (e.g. HTTP headers). Listing a field name in `camelifyBlacklist` (`camelify.go`) still camelifies the field name itself, but leaves its inner map keys untouched.
 
 ## Debugging
 
