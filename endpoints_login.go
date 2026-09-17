@@ -77,6 +77,7 @@ type ExchangeOAuthCodeParams struct {
 	CodeVerifier string
 	RedirectURI  string
 	ClientID     string
+	DeviceInfo string
 }
 
 // ExchangeOAuthCodeResponse : response for ExchangeOAuthCode
@@ -112,6 +113,7 @@ func (c *Client) ExchangeOAuthCode(ctx context.Context, params ExchangeOAuthCode
 	q.AddString("code_verifier", params.CodeVerifier)
 	q.AddString("redirect_uri", params.RedirectURI)
 	q.AddString("client_id", params.ClientID)
+	q.AddStringIfNonEmpty("device_info", params.DeviceInfo)
 
 	r := &ExchangeOAuthCodeResponse{}
 	return r, q.Post(ctx, r)
