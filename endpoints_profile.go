@@ -28,7 +28,7 @@ type ListProfileGamesResponse struct {
 	Games []*Game `json:"games"`
 }
 
-// ListProfileGames lists the games one develops (ie. can edit)
+// ListProfileGames lists the games one develops (i.e. can edit)
 func (c *Client) ListProfileGames(ctx context.Context) (*ListProfileGamesResponse, error) {
 	q := NewQuery(c, "/profile/games")
 	r := &ListProfileGamesResponse{}
