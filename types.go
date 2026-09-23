@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -72,6 +73,14 @@ type Game struct {
 
 	// Platforms this game is available for
 	Platforms Platforms `json:"platforms" hades:"squash"`
+
+	// Exact platforms found by scanning the game's uploads, such as
+	// `linux-amd64`, `windows-386`, `rom:gba`, or a device profile id.
+	// Independent of Platforms, which comes from uploader-set tags.
+	// nil when the uploads haven't been scanned, empty when a scan
+	// found nothing.
+	// @optional
+	ScannedPlatforms []string `json:"scannedPlatforms"`
 
 	// The user account this game is associated to
 	// @optional
@@ -222,6 +231,21 @@ type Upload struct {
 	// Platforms this upload is compatible with
 	Platforms Platforms `json:"platforms" hades:"squash"`
 
+	// Launch targets found by scanning the upload's contents, as a
+	// marshaled []dash.LaunchTarget kept raw so this package doesn't
+	// depend on dash. nil when the upload hasn't been scanned, `[]`
+	// when a scan found nothing. For wharf uploads this describes the
+	// current build.
+	// @optional
+	LaunchTargets json.RawMessage `json:"launchTargets,omitempty"`
+	// Where LaunchTargets came from: "server" for a wharfd scan,
+	// "client" for an unverified report from the pushing butler.
+	// @optional
+	LaunchTargetsSource LaunchTargetsSource `json:"launchTargetsSource,omitempty"`
+	// Identifies the client that produced a client report, e.g. "butler/15.26.0"
+	// @optional
+	LaunchTargetsScannerVersion string `json:"launchTargetsScannerVersion,omitempty"`
+
 	// Date this upload was created at
 	// @optional
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
@@ -229,6 +253,16 @@ type Upload struct {
 	// @optional
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
+
+// LaunchTargetsSource describes who produced an upload's launch targets.
+type LaunchTargetsSource string
+
+const (
+	// LaunchTargetsSourceServer is a wharfd scan of the upload
+	LaunchTargetsSourceServer LaunchTargetsSource = "server"
+	// LaunchTargetsSourceClient is the report butler sent when pushing the build
+	LaunchTargetsSourceClient LaunchTargetsSource = "client"
+)
 
 // UploadStorage describes where an upload file is stored.
 type UploadStorage string

@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/getlantern/idletiming v0.0.0-20231030193830-6767b09f86db
 	github.com/itchio/httpkit v0.0.0-20251229220831-fe361f261a25
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0

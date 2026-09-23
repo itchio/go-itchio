@@ -406,6 +406,7 @@ func ParseAPIResponse(dst any, res *http.Response) error {
 		WeaklyTypedInput: true,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeHookFunc(time.RFC3339Nano),
+			RawJSONHookFunc,
 			GameHookFunc,
 			UploadHookFunc,
 		),

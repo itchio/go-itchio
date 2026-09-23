@@ -132,3 +132,24 @@ func tmust(t *testing.T, err error) {
 		t.FailNow()
 	}
 }
+
+func Test_GameScannedPlatforms(t *testing.T) {
+	{
+		var game Game
+		decodeResponse(t, `{"id": 1, "traits": [], "scanned_platforms": ["linux-amd64", "rom:gba"]}`, &game)
+		assert.EqualValues(t, []string{"linux-amd64", "rom:gba"}, game.ScannedPlatforms)
+	}
+
+	{
+		var game Game
+		decodeResponse(t, `{"id": 1, "scanned_platforms": []}`, &game)
+		assert.NotNil(t, game.ScannedPlatforms)
+		assert.Empty(t, game.ScannedPlatforms)
+	}
+
+	{
+		var game Game
+		decodeResponse(t, `{"id": 1}`, &game)
+		assert.Nil(t, game.ScannedPlatforms)
+	}
+}

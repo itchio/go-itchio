@@ -15,10 +15,12 @@ func camelify(input any) any {
 // FIXME: this is bad, find another way to fix it
 var camelifyBlacklist = map[string]struct{}{
 	"upload_headers": {},
+	// dash.LaunchTarget keys are snake_case, see Upload.LaunchTargets
+	"launch_targets": {},
 }
 
 func camelifyArray(input []any) []any {
-	var result []any
+	result := make([]any, 0, len(input))
 
 	for _, el := range input {
 		result = append(result, camelify(el))

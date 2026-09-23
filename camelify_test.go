@@ -39,4 +39,13 @@ func Test_Camelify(t *testing.T) {
 	assert.EqualValues(t, true, mm.(map[string]any)["pOsx"])
 	assert.EqualValues(t, "John Doe", mm.(map[string]any)["userList"].([]any)[0].(map[string]any)["fullName"])
 	assert.EqualValues(t, "Jane Fischer", mm.(map[string]any)["userList"].([]any)[1].(map[string]any)["fullName"])
+
+	// blacklisted keys are renamed but their contents are left alone
+	m2 := map[string]any{
+		"launch_targets": []any{
+			map[string]any{"path": "game.x86_64", "linux_info": map[string]any{"arch": "amd64"}},
+		},
+	}
+	targets := camelify(m2).(map[string]any)["launchTargets"].([]any)
+	assert.EqualValues(t, "amd64", targets[0].(map[string]any)["linux_info"].(map[string]any)["arch"])
 }
