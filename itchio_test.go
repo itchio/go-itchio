@@ -83,7 +83,7 @@ func Test_ExchangeOAuthCode(t *testing.T) {
 	assert.NotNil(t, resp.Key)
 	assert.EqualValues(t, 123, resp.Key.ID)
 	assert.EqualValues(t, "abc123", resp.Key.Key)
-	assert.EqualValues(t, "xyz789", resp.Cookie["itchioToken"])
+	assert.EqualValues(t, "xyz789", resp.Cookie["itchio_token"])
 }
 
 func Test_ExchangeOAuthCodeError(t *testing.T) {

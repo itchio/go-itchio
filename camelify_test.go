@@ -49,3 +49,16 @@ func Test_Camelify(t *testing.T) {
 	targets := camelify(m2).(map[string]any)["launchTargets"].([]any)
 	assert.EqualValues(t, "amd64", targets[0].(map[string]any)["linux_info"].(map[string]any)["arch"])
 }
+
+func Test_CamelifyBlacklist(t *testing.T) {
+	m1 := make(map[string]any)
+	m1["cookie"] = map[string]any{
+		"itchio":     "session-value",
+		"other_name": "raw-value",
+	}
+
+	mm := camelify(m1).(map[string]any)
+	cookie := mm["cookie"].(map[string]any)
+	assert.EqualValues(t, "session-value", cookie["itchio"])
+	assert.EqualValues(t, "raw-value", cookie["other_name"])
+}

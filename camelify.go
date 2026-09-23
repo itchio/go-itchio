@@ -17,6 +17,8 @@ var camelifyBlacklist = map[string]struct{}{
 	"upload_headers": {},
 	// dash.LaunchTarget keys are snake_case, see Upload.LaunchTargets
 	"launch_targets": {},
+	// Cookie names must be preserved verbatim.
+	"cookie": {},
 }
 
 func camelifyArray(input []any) []any {
