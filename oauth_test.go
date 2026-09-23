@@ -22,7 +22,7 @@ func newTestOAuthClient(t *testing.T, server *httptest.Server, creds *OAuthCrede
 }
 
 func TestRefreshRetainsRefreshTokenWhenOmitted(t *testing.T) {
-	var refreshCalls int32
+	var refreshCalls atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/oauth/token" {
@@ -38,7 +38,7 @@ func TestRefreshRetainsRefreshTokenWhenOmitted(t *testing.T) {
 		assert.Equal(t, "old-refresh", values.Get("refresh_token"))
 		assert.Equal(t, "client-123", values.Get("client_id"))
 
-		atomic.AddInt32(&refreshCalls, 1)
+		refreshCalls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		// Server does not rotate refresh token (field empty)
 		_, _ = w.Write([]byte(`{"accessToken":"new-access","expiresIn":120}`))
@@ -56,7 +56,7 @@ func TestRefreshRetainsRefreshTokenWhenOmitted(t *testing.T) {
 
 	err := client.refreshTokenIfNeeded(context.Background())
 	assert.NoError(t, err)
-	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls))
+	assert.EqualValues(t, 1, refreshCalls.Load())
 
 	client.oauth.credsMu.RLock()
 	defer client.oauth.credsMu.RUnlock()
@@ -67,10 +67,10 @@ func TestRefreshRetainsRefreshTokenWhenOmitted(t *testing.T) {
 }
 
 func TestNonPositiveExpiryDoesNotTriggerRefresh(t *testing.T) {
-	var refreshCalls int32
+	var refreshCalls atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&refreshCalls, 1)
+		refreshCalls.Add(1)
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()
@@ -85,18 +85,18 @@ func TestNonPositiveExpiryDoesNotTriggerRefresh(t *testing.T) {
 
 	err := client.refreshTokenIfNeeded(context.Background())
 	assert.NoError(t, err)
-	assert.EqualValues(t, 0, atomic.LoadInt32(&refreshCalls), "refresh should not be attempted for non-expiring tokens")
+	assert.EqualValues(t, 0, refreshCalls.Load(), "refresh should not be attempted for non-expiring tokens")
 }
 
 func TestProactiveRefreshWithinBuffer(t *testing.T) {
-	var refreshCalls int32
+	var refreshCalls atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/oauth/token" {
 			t.Fatalf("unexpected path: %s", r.URL.Path)
 		}
 
-		atomic.AddInt32(&refreshCalls, 1)
+		refreshCalls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"accessToken":"refreshed","refreshToken":"rotated","expiresIn":300}`))
 	}))
@@ -114,7 +114,7 @@ func TestProactiveRefreshWithinBuffer(t *testing.T) {
 
 	err := client.refreshTokenIfNeeded(context.Background())
 	assert.NoError(t, err)
-	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls))
+	assert.EqualValues(t, 1, refreshCalls.Load())
 
 	client.oauth.credsMu.RLock()
 	defer client.oauth.credsMu.RUnlock()
@@ -125,20 +125,20 @@ func TestProactiveRefreshWithinBuffer(t *testing.T) {
 
 func TestRetryOn401WithTokenRefresh(t *testing.T) {
 	var (
-		apiCalls     int32
-		refreshCalls int32
+		apiCalls     atomic.Int32
+		refreshCalls atomic.Int32
 		authHeaders  []string
 	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
-			atomic.AddInt32(&refreshCalls, 1)
+			refreshCalls.Add(1)
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"accessToken":"refreshed-token","refreshToken":"new-refresh","expiresIn":300}`))
 
 		case "/profile":
-			callNum := atomic.AddInt32(&apiCalls, 1)
+			callNum := apiCalls.Add(1)
 			authHeaders = append(authHeaders, r.Header.Get("Authorization"))
 
 			if callNum == 1 {
@@ -171,8 +171,8 @@ func TestRetryOn401WithTokenRefresh(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the flow
-	assert.EqualValues(t, 2, atomic.LoadInt32(&apiCalls), "expected 2 API calls (initial + retry)")
-	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls), "expected 1 refresh call")
+	assert.EqualValues(t, 2, apiCalls.Load(), "expected 2 API calls (initial + retry)")
+	assert.EqualValues(t, 1, refreshCalls.Load(), "expected 1 refresh call")
 
 	// Verify auth headers: first with old token, second with refreshed token
 	assert.Len(t, authHeaders, 2)
@@ -188,7 +188,7 @@ func TestRetryOn401WithTokenRefresh(t *testing.T) {
 
 func TestRetryOn401WithPOSTBody(t *testing.T) {
 	var (
-		apiCalls    int32
+		apiCalls    atomic.Int32
 		requestBody string
 	)
 
@@ -199,7 +199,7 @@ func TestRetryOn401WithPOSTBody(t *testing.T) {
 			_, _ = w.Write([]byte(`{"accessToken":"new-token","expiresIn":300}`))
 
 		case "/wharf/builds":
-			callNum := atomic.AddInt32(&apiCalls, 1)
+			callNum := apiCalls.Add(1)
 
 			// Read body on retry to verify it was preserved
 			if callNum == 2 {
@@ -234,7 +234,7 @@ func TestRetryOn401WithPOSTBody(t *testing.T) {
 		Channel: "stable",
 	})
 	assert.NoError(t, err)
-	assert.EqualValues(t, 2, atomic.LoadInt32(&apiCalls))
+	assert.EqualValues(t, 2, apiCalls.Load())
 
 	// Verify POST body was preserved on retry
 	values, err := url.ParseQuery(requestBody)
@@ -245,19 +245,19 @@ func TestRetryOn401WithPOSTBody(t *testing.T) {
 
 func TestNo401RetryLoopOnPersistentFailure(t *testing.T) {
 	var (
-		apiCalls     int32
-		refreshCalls int32
+		apiCalls     atomic.Int32
+		refreshCalls atomic.Int32
 	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
-			atomic.AddInt32(&refreshCalls, 1)
+			refreshCalls.Add(1)
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"accessToken":"still-bad","expiresIn":300}`))
 
 		case "/profile":
-			atomic.AddInt32(&apiCalls, 1)
+			apiCalls.Add(1)
 			// Always return 401 (simulates revoked access)
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte(`{"errors":["invalid token"]}`))
@@ -280,6 +280,6 @@ func TestNo401RetryLoopOnPersistentFailure(t *testing.T) {
 
 	// Should fail after one retry attempt (not infinite loop)
 	assert.Error(t, err)
-	assert.EqualValues(t, 2, atomic.LoadInt32(&apiCalls), "expected exactly 2 API calls")
-	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls), "expected exactly 1 refresh attempt")
+	assert.EqualValues(t, 2, apiCalls.Load(), "expected exactly 2 API calls")
+	assert.EqualValues(t, 1, refreshCalls.Load(), "expected exactly 1 refresh attempt")
 }

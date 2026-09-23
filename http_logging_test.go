@@ -76,10 +76,10 @@ func TestSlogHTTP_SingleSuccess(t *testing.T) {
 }
 
 func TestSlogHTTP_503ThenSuccess(t *testing.T) {
-	var calls int32
+	var calls atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if atomic.AddInt32(&calls, 1) == 1 {
+		if calls.Add(1) == 1 {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			_, _ = w.Write([]byte(`{"errors":["rate limited"]}`))
 			return
@@ -120,7 +120,7 @@ func TestSlogHTTP_503ThenSuccess(t *testing.T) {
 }
 
 func TestSlogHTTP_OAuth401RefreshRetry(t *testing.T) {
-	var apiCalls int32
+	var apiCalls atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -128,7 +128,7 @@ func TestSlogHTTP_OAuth401RefreshRetry(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"accessToken":"refreshed-token","refreshToken":"new-refresh","expiresIn":300}`))
 		case "/profile":
-			if atomic.AddInt32(&apiCalls, 1) == 1 {
+			if apiCalls.Add(1) == 1 {
 				w.WriteHeader(http.StatusUnauthorized)
 				_, _ = w.Write([]byte(`{"errors":["invalid token"]}`))
 				return
