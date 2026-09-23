@@ -202,7 +202,7 @@ type MakeBuildDownloadURLParams struct {
 	Credentials GameCredentials
 }
 
-// MakeBuildDownloadURL generates as download URL for a specific build
+// MakeBuildDownloadURL generates a download URL for a specific build
 func (c *Client) MakeBuildDownloadURL(p MakeBuildDownloadURLParams) string {
 	subType := p.SubType
 	if subType == "" {
