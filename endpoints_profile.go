@@ -2,8 +2,6 @@ package itchio
 
 import (
 	"context"
-	"strconv"
-	"strings"
 )
 
 //-------------------------------------------------------
@@ -40,6 +38,11 @@ func (c *Client) ListProfileGames(ctx context.Context) (*ListProfileGamesRespons
 // ListProfileOwnedKeysParams : params for ListProfileOwnedKeys
 type ListProfileOwnedKeysParams struct {
 	Page int64
+	// Optional. Defaults to 50, max 500.
+	PerPage int64
+	// Optional. Only return keys for these games. Limited to 50 IDs. A game
+	// can have more than one owned key.
+	GameIDs []int64
 }
 
 // ListProfileOwnedKeysResponse : response for ListProfileOwnedKeys
@@ -54,6 +57,8 @@ type ListProfileOwnedKeysResponse struct {
 func (c *Client) ListProfileOwnedKeys(ctx context.Context, p ListProfileOwnedKeysParams) (*ListProfileOwnedKeysResponse, error) {
 	q := NewQuery(c, "/profile/owned-keys")
 	q.AddInt64IfNonZero("page", p.Page)
+	q.AddInt64IfNonZero("per_page", p.PerPage)
+	q.AddInt64CommaList("game_ids", p.GameIDs)
 	r := &ListProfileOwnedKeysResponse{}
 	return r, q.Get(ctx, r)
 }
@@ -148,13 +153,7 @@ func (c *Client) ListProfileBuilds(ctx context.Context, p ListProfileBuildsParam
 	if p.IncludeTotals {
 		q.AddStringIfNonEmpty("include_totals", "1")
 	}
-	if len(p.StartedBuildIDs) > 0 {
-		ids := make([]string, len(p.StartedBuildIDs))
-		for i, id := range p.StartedBuildIDs {
-			ids[i] = strconv.FormatInt(id, 10)
-		}
-		q.AddString("started_build_ids", strings.Join(ids, ","))
-	}
+	q.AddInt64CommaList("started_build_ids", p.StartedBuildIDs)
 	r := &ListProfileBuildsResponse{}
 	return r, q.Get(ctx, r)
 }

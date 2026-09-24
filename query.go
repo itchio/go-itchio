@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -75,6 +77,18 @@ func (q *Query) AddInt64List(key string, values []int64) {
 		panic(err)
 	}
 	q.AddString(key, string(encoded))
+}
+
+// AddInt64CommaList adds param key=1,2,3 if values is non-empty
+func (q *Query) AddInt64CommaList(key string, values []int64) {
+	if len(values) == 0 {
+		return
+	}
+	ids := make([]string, len(values))
+	for i, id := range values {
+		ids[i] = strconv.FormatInt(id, 10)
+	}
+	q.AddString(key, strings.Join(ids, ","))
 }
 
 // AddString adds the parameter key=value even if the value is empty.
