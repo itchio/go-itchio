@@ -245,6 +245,9 @@ type Upload struct {
 	// Identifies the client that produced a client report, e.g. "butler/15.26.0"
 	// @optional
 	LaunchTargetsScannerVersion string `json:"launchTargetsScannerVersion,omitempty"`
+	// Size in bytes of the extracted files the launch targets were found in
+	// @optional
+	LaunchTargetsExtractedSize int64 `json:"launchTargetsExtractedSize,omitempty"`
 
 	// Date this upload was created at
 	// @optional

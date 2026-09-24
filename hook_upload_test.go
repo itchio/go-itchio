@@ -107,11 +107,13 @@ func Test_UploadLaunchTargets(t *testing.T) {
 				{"path": "bin/game", "depth": 2, "flavor": "linux", "arch": "amd64", "linux_info": {"arch": "amd64", "imports": ["libc.so.6"]}}
 			],
 			"launch_targets_source": "client",
-			"launch_targets_scanner_version": "butler/15.26.0"
+			"launch_targets_scanner_version": "butler/15.26.0",
+			"launch_targets_extracted_size": 5000000000
 		}`, &upload)
 
 		assert.EqualValues(t, LaunchTargetsSourceClient, upload.LaunchTargetsSource)
 		assert.EqualValues(t, "butler/15.26.0", upload.LaunchTargetsScannerVersion)
+		assert.EqualValues(t, 5000000000, upload.LaunchTargetsExtractedSize)
 		assert.EqualValues(t, ArchitecturesAll, upload.Platforms.Linux)
 
 		// keys inside targets keep dash's snake_case

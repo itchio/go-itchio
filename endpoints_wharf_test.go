@@ -64,10 +64,11 @@ func TestCreateBuildLaunchAnalysis(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		targets json.RawMessage
+		size    int64
 	}{
 		{name: "omitted"},
 		{name: "empty", targets: json.RawMessage(`[]`)},
-		{name: "populated", targets: json.RawMessage(`[{"path":"bin/game","depth":2,"flavor":"linux","linux_info":{"glibcVersion":"2.17"},"engine":{"engine":"godot","details":{"future_field":true}}}]`)},
+		{name: "populated", size: 1234, targets: json.RawMessage(`[{"path":"bin/game","depth":2,"flavor":"linux","linux_info":{"glibcVersion":"2.17"},"engine":{"engine":"godot","details":{"future_field":true}}}]`)},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			params := CreateBuildParams{
@@ -75,7 +76,7 @@ func TestCreateBuildLaunchAnalysis(t *testing.T) {
 				Metadata: BuildMetadata{"steam": map[string]any{"app_id": 123}},
 			}
 			if tc.targets != nil {
-				params.LaunchAnalysis = &BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: tc.targets}
+				params.LaunchAnalysis = &BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: tc.targets, ExtractedSize: tc.size}
 			}
 			result, err := client.CreateBuild(context.Background(), params)
 			if !assert.NoError(t, err) {
@@ -96,6 +97,7 @@ func TestCreateBuildLaunchAnalysis(t *testing.T) {
 				SchemaVersion  int             `json:"schema_version"`
 				ScannerVersion string          `json:"scanner_version"`
 				LaunchTargets  json.RawMessage `json:"launch_targets"`
+				ExtractedSize  *int64          `json:"extracted_size"`
 			}
 			if !assert.NoError(t, json.Unmarshal([]byte(values.Get("launch_analysis")), &got)) {
 				return
@@ -103,6 +105,11 @@ func TestCreateBuildLaunchAnalysis(t *testing.T) {
 			assert.Equal(t, 1, got.SchemaVersion)
 			assert.Equal(t, "butler/test", got.ScannerVersion)
 			assert.JSONEq(t, string(tc.targets), string(got.LaunchTargets))
+			if tc.size == 0 {
+				assert.Nil(t, got.ExtractedSize)
+			} else if assert.NotNil(t, got.ExtractedSize) {
+				assert.Equal(t, tc.size, *got.ExtractedSize)
+			}
 		})
 	}
 }
@@ -129,6 +136,7 @@ func TestCreateBuildRejectsInvalidLaunchAnalysis(t *testing.T) {
 		{name: "object targets", report: BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: json.RawMessage(`{}`)}},
 		{name: "encoded string", report: BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: json.RawMessage(`"[]"`)}},
 		{name: "malformed array", report: BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: json.RawMessage(`[`)}},
+		{name: "negative size", report: BuildLaunchAnalysis{SchemaVersion: 1, ScannerVersion: "butler/test", LaunchTargets: json.RawMessage(`[]`), ExtractedSize: -1}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := client.CreateBuild(context.Background(), CreateBuildParams{Target: "user/game", Channel: "linux", LaunchAnalysis: &tc.report})

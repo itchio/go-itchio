@@ -119,6 +119,8 @@ type BuildLaunchAnalysis struct {
 	// package doesn't depend on dash. Use [] when the scan found nothing;
 	// null is rejected.
 	LaunchTargets json.RawMessage `json:"launch_targets"`
+	// ExtractedSize is the total size in bytes of the scanned files, 0 if unknown.
+	ExtractedSize int64 `json:"extracted_size,omitempty"`
 }
 
 // CreateBuildResponse : response for CreateBuild
@@ -159,6 +161,9 @@ func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateB
 		targets := bytes.TrimSpace(analysis.LaunchTargets)
 		if len(targets) == 0 || targets[0] != '[' || !json.Valid(targets) {
 			return nil, errors.New("launch analysis targets must be a JSON array")
+		}
+		if analysis.ExtractedSize < 0 {
+			return nil, errors.New("launch analysis extracted size can't be negative")
 		}
 		jsonData, err := json.Marshal(analysis)
 		if err != nil {
