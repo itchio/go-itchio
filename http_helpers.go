@@ -42,6 +42,7 @@ var sensitiveLogQueryKeys = map[string]struct{}{
 	"refresh_token": {},
 	"code":          {},
 	"code_verifier": {},
+	"device_code":   {},
 	"token":         {},
 }
 
