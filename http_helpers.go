@@ -337,10 +337,17 @@ func (c *Client) MakeValuesPath(values url.Values, format string, a ...any) stri
 
 func asHTTPCodeError(res *http.Response) error {
 	if res.StatusCode/100 != 2 {
-		err := fmt.Errorf("Server error: HTTP %s for %s", res.Status, res.Request.URL.Path)
-		return err
+		return newHTTPError(res)
 	}
 	return nil
+}
+
+func newHTTPError(res *http.Response) *HTTPError {
+	return &HTTPError{
+		StatusCode: res.StatusCode,
+		Status:     res.Status,
+		Path:       res.Request.URL.Path,
+	}
 }
 
 // ParseAPIResponse unmarshals an HTTP response into one of out response
@@ -423,7 +430,7 @@ func ParseAPIResponse(dst any, res *http.Response) error {
 	}
 
 	if res.StatusCode != 200 {
-		return pkgerrors.Errorf("HTTP %v", res.StatusCode)
+		return newHTTPError(res)
 	}
 
 	return nil

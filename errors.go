@@ -1,6 +1,7 @@
 package itchio
 
 import (
+	stderrors "errors"
 	"fmt"
 	"strings"
 
@@ -35,4 +36,27 @@ func AsAPIError(err error) (*APIError, bool) {
 	rootErr := errors.Cause(err)
 	apiError, ok := rootErr.(*APIError)
 	return apiError, ok
+}
+
+// HTTPError is returned for a response that carried no structured API
+// error but was not a success, such as a proxy or origin failure.
+type HTTPError struct {
+	StatusCode int
+	Status     string
+	Path       string
+}
+
+var _ error = (*HTTPError)(nil)
+
+func (he *HTTPError) Error() string {
+	return fmt.Sprintf("Server error: HTTP %s for %s", he.Status, he.Path)
+}
+
+// AsHTTPError returns the *HTTPError in err's chain, if any.
+func AsHTTPError(err error) (*HTTPError, bool) {
+	var he *HTTPError
+	if stderrors.As(err, &he) {
+		return he, true
+	}
+	return nil, false
 }
