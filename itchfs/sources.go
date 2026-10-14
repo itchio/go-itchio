@@ -1,6 +1,7 @@
 package itchfs
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"path"
@@ -95,7 +96,7 @@ func (s *source) makeDownloadBuildURL(tokens []string) (htfs.GetURLFunc, error) 
 	buildID, _ := strconv.ParseInt(tokens[5], 10, 64)
 	fileType := tokens[6]
 
-	getter := func() (string, error) {
+	getter := func(context.Context) (string, error) {
 		return s.ItchClient.MakeBuildDownloadURL(itchio.MakeBuildDownloadURLParams{
 			BuildID:     buildID,
 			UUID:        s.QueryValues.Get("uuid"),
@@ -125,7 +126,7 @@ func (s *source) makeKeyDownloadBuildURL(tokens []string) (htfs.GetURLFunc, erro
 	buildID, _ := strconv.ParseInt(tokens[6], 10, 64)
 	fileType := tokens[7]
 
-	getter := func() (string, error) {
+	getter := func(context.Context) (string, error) {
 		creds := parseGameCredentials(s.QueryValues)
 		creds.DownloadKeyID, _ = strconv.ParseInt(downloadKey, 10, 64)
 
@@ -151,7 +152,7 @@ func (s *source) makeWharfDownloadBuildURL(tokens []string) (htfs.GetURLFunc, er
 		return nil, errors.WithStack(err)
 	}
 
-	getter := func() (string, error) {
+	getter := func(context.Context) (string, error) {
 		return s.ItchClient.MakeBuildFileDownloadURL(itchio.MakeBuildFileDownloadURLParams{
 			BuildID: buildID,
 			FileID:  buildFileID,
@@ -163,7 +164,7 @@ func (s *source) makeWharfDownloadBuildURL(tokens []string) (htfs.GetURLFunc, er
 func (s *source) makeDownloadUploadURL(tokens []string) (htfs.GetURLFunc, error) {
 	uploadID, _ := strconv.ParseInt(tokens[2], 10, 64)
 
-	getter := func() (string, error) {
+	getter := func(context.Context) (string, error) {
 		return s.ItchClient.MakeUploadDownloadURL(itchio.MakeUploadDownloadURLParams{
 			UploadID:    uploadID,
 			Credentials: parseGameCredentials(s.QueryValues),
@@ -180,7 +181,7 @@ func (s *source) makeKeyDownloadUploadURL(tokens []string) (htfs.GetURLFunc, err
 	creds := parseGameCredentials(s.QueryValues)
 	creds.DownloadKeyID, _ = strconv.ParseInt(downloadKey, 10, 64)
 
-	getter := func() (string, error) {
+	getter := func(context.Context) (string, error) {
 		return s.ItchClient.MakeUploadDownloadURL(itchio.MakeUploadDownloadURLParams{
 			UploadID:    uploadID,
 			Credentials: creds,

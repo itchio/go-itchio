@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/getlantern/idletiming v0.0.0-20231030193830-6767b09f86db
-	github.com/itchio/httpkit v0.0.0-20251229220831-fe361f261a25
+	github.com/itchio/httpkit v0.0.0-20261014001543-804157f68bf3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
