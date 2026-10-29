@@ -174,6 +174,9 @@ type MakeUploadDownloadURLParams struct {
 
 	// Optional
 	Credentials GameCredentials
+
+	// Optional
+	Probe bool
 }
 
 // MakeUploadDownloadURL generates a download URL for an upload
@@ -182,6 +185,7 @@ func (c *Client) MakeUploadDownloadURL(p MakeUploadDownloadURLParams) string {
 	q.AddAPICredentials()
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
+	q.AddBoolIfTrue("probe", p.Probe)
 	return q.URL()
 }
 
@@ -200,6 +204,9 @@ type MakeBuildDownloadURLParams struct {
 
 	// Optional
 	Credentials GameCredentials
+
+	// Optional
+	Probe bool
 }
 
 // MakeBuildDownloadURL generates as download URL for a specific build
@@ -213,5 +220,6 @@ func (c *Client) MakeBuildDownloadURL(p MakeBuildDownloadURLParams) string {
 	q.AddAPICredentials()
 	q.AddGameCredentials(p.Credentials)
 	q.AddStringIfNonEmpty("uuid", p.UUID)
+	q.AddBoolIfTrue("probe", p.Probe)
 	return q.URL()
 }

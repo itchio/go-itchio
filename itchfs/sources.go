@@ -100,6 +100,7 @@ func (s *source) makeDownloadBuildURL(tokens []string) (htfs.GetURLFunc, error) 
 		return s.ItchClient.MakeBuildDownloadURL(itchio.MakeBuildDownloadURLParams{
 			BuildID:     buildID,
 			UUID:        s.QueryValues.Get("uuid"),
+			Probe:       s.QueryValues.Get("probe") == "true",
 			Type:        itchio.BuildFileType(fileType),
 			Credentials: parseGameCredentials(s.QueryValues),
 		}), nil
@@ -134,6 +135,7 @@ func (s *source) makeKeyDownloadBuildURL(tokens []string) (htfs.GetURLFunc, erro
 			BuildID:     buildID,
 			Type:        itchio.BuildFileType(fileType),
 			UUID:        s.QueryValues.Get("uuid"),
+			Probe:       s.QueryValues.Get("probe") == "true",
 			Credentials: creds,
 		}), nil
 	}
@@ -169,6 +171,7 @@ func (s *source) makeDownloadUploadURL(tokens []string) (htfs.GetURLFunc, error)
 			UploadID:    uploadID,
 			Credentials: parseGameCredentials(s.QueryValues),
 			UUID:        s.QueryValues.Get("uuid"),
+			Probe:       s.QueryValues.Get("probe") == "true",
 		}), nil
 	}
 	return getter, nil
@@ -186,6 +189,7 @@ func (s *source) makeKeyDownloadUploadURL(tokens []string) (htfs.GetURLFunc, err
 			UploadID:    uploadID,
 			Credentials: creds,
 			UUID:        s.QueryValues.Get("uuid"),
+			Probe:       s.QueryValues.Get("probe") == "true",
 		}), nil
 	}
 	return getter, nil
