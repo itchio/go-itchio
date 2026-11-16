@@ -104,6 +104,10 @@ type CreateBuildParams struct {
 	// and rejects unknown keys; it is not verified beyond that.
 	Metadata       BuildMetadata
 	LaunchAnalysis *BuildLaunchAnalysis
+	// SourceSize is the total size in bytes of the files being pushed. The
+	// API refuses to create the build if it exceeds the maximum build size.
+	// 0 skips the check.
+	SourceSize int64
 }
 
 // BuildMetadata is the JSON object stored with a build. The API owns
@@ -143,6 +147,7 @@ func (c *Client) CreateBuild(ctx context.Context, p CreateBuildParams) (*CreateB
 	q.AddStringIfNonEmpty("user_version", p.UserVersion)
 	q.AddBoolIfTrue("hidden", p.Hidden)
 	q.AddStringIfNonEmpty("source", p.Source)
+	q.AddInt64IfNonZero("source_size", p.SourceSize)
 	if len(p.Metadata) > 0 {
 		jsonData, err := json.Marshal(p.Metadata)
 		if err != nil {
